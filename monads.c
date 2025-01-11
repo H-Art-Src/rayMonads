@@ -141,7 +141,8 @@ struct structDot* AddDot( Vector2 canvasPosition , structDot* containingDotPtr )
     newDotPtr->deleteFrame = DELETE_OFF;
     
     newDotPtr->name[0] = containingDotPtr->rootSubDots ? containingDotPtr->rootSubDots->prev->name[0] + 1 : 'A';
-
+    newDotPtr->name[1] = 0;
+    
     //insert new dot in list entry.
     structDot* rootPtr = containingDotPtr->rootSubDots;
     if(rootPtr) //has entries.
