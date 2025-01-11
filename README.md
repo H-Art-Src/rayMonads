@@ -1,6 +1,6 @@
-Infinite depth of monads with variable connections(functors) between them at any depth.
+Infinite depth of monads (objects) with variable connections (functors) between them at any depth.
 
-Use mouse wheel to change the depth.
+Use the mouse wheel to change the depth.
 
 Click any object/connection to select it.
 
