@@ -402,7 +402,7 @@ struct structActiveResult RecursiveDraw(structDot* dotPtr , int functionDepth , 
             else if (INSCOPE)
             {
                 DrawLineV(dotPtr->avgCenter , iterator->avgCenter , iterator == rootDotPtr ? VIOLET : GREEN);
-                DrawLineV(next->avgCenter , iterator->avgCenter , Fade(YELLOW , 0.5f));
+                DrawLineV(next->avgCenter , iterator->avgCenter , Fade((iterator == rootDotPtr->prev)? ORANGE : YELLOW , 0.5f));
             }
 
             //--------------------------------
@@ -511,7 +511,7 @@ int main(void)
             {
                 strcpy(monadLog , "Link [");
                 strcat(monadLog , selectedLink->startDot->name);
-                strcat(monadLog , "] -> [");
+                strcat(monadLog , "] to [");
                 strcat(monadLog , selectedLink->endDot->name);
                 if (RemoveLink(selectedLink , selectedDot))
                     {
@@ -523,7 +523,7 @@ int main(void)
             }
             else if (IsKeyPressed(KEY_DELETE) && selectedDot != &GodDot)
             {
-                strcpy(monadLog , "Deleting object [");
+                strcpy(monadLog , "Deleted object [");
                 strcat(monadLog , selectedDot->name);
                 strcat(monadLog , "].");
                 selectedDot->deleteFrame = DELETE_PRELINK;
@@ -552,18 +552,19 @@ int main(void)
 
             mainResult = RecursiveDraw(&GodDot  , 0 , selectedDepth);
 
-            DrawText( monadLog , 48 , 16, 16 , GRAY);
+            DrawText( monadLog , 48 , 8 , 20 , GRAY);
 
             if(selectedDot)
             {
                 int determineMode = selectedDot->depth - selectedDepth;
                 DrawText( !determineMode ? "Adding" : determineMode == 1 ? "Linking" : "Edit Only" , 32, 32, 20, SKYBLUE);
-                DrawPoly(selectedDot->avgCenter, 4 ,  2.0f ,   0 , RED);
+                DrawPoly(selectedDot->avgCenter, 3 ,  10.0f ,   0 ,  Fade(RED , 0.5f));
             }
             else
             {
                 DrawText( "Null Selection" , 32, 32, 20, ORANGE);
             }
+
             if(selectedLink)
             {
                 DrawText("Edit Link" , 32, 64, 20, PURPLE);
@@ -594,18 +595,35 @@ int main(void)
                 {
                    if (mainResult.resultDot && mainResult.resultContainerDot && mainResult.resultDepth == selectedDot->depth)
                    {
-                       if(SameCategory(selectedDot , mainResult.resultDot))
-                            AddLink(selectedDot , mainResult.resultDot , mainResult.resultContainerDot);
+                       if (SameCategory(selectedDot , mainResult.resultDot))
+                            selectedLink = AddLink(selectedDot , mainResult.resultDot , mainResult.resultContainerDot);
                         else
-                            AddLink(mainResult.resultDot , selectedDot , mainResult.resultContainerDot);
+                            selectedLink = AddLink(mainResult.resultDot , selectedDot , mainResult.resultContainerDot);
+                        if(selectedLink)
+                        {
+                            strcpy(monadLog , "Added link [");
+                            strcat(monadLog , selectedLink->startDot->name);
+                            strcat(monadLog , "] to [");
+                            strcat(monadLog , selectedLink->endDot->name);
+                            strcat(monadLog , "].");
+                        }
                         selectedDot = mainResult.resultDot;
+                        selectedLink = NULL;
                    }
                    else if (selectedDepth == selectedDot->depth)
                    {
                         if (!mainResult.resultDot)
-                            AddDot(GetMousePosition() ,  selectedDot);
+                        {
+                            strcpy(monadLog , "Added object [");
+                            strcat(monadLog , AddDot(GetMousePosition() ,  selectedDot)->name);
+                            strcat(monadLog , "].");
+                        }
                         else if (selectedLink && selectedLink->startDot->depth == mainResult.resultDot->depth)
-                            selectedLink->endDot = mainResult.resultDot;
+                        {
+                            strcpy(monadLog , "Changed link end object to [");
+                            strcat(monadLog , (selectedLink->endDot = mainResult.resultDot)->name);
+                            strcat(monadLog , "].");
+                        }
                    }
                 }
             break;
