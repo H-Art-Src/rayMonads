@@ -56,16 +56,16 @@
 
 /*******************************************************************************************
 *
-*   raylib [core] example - Basic window
+*   raylib [core] example - Monads
 *
 *   Example originally created with raylib 4.5, last time updated with raylib 4.5
 *
-*   Example contributed by <user_name> (@<user_github>) and reviewed by Ramon Santamaria (@raysan5)
+*   Example contributed by H-Art-Src (@<H-Art-Src>)
 *
 *   Example licensed under an unmodified zlib/libpng license, which is an OSI-certified,
 *   BSD-like license that allows static linking with closed source software
 *
-*   Copyright (c) 2023 H-Art-Src (@<user_github>)
+*   Copyright (c) 2025 H-Art-Src (@<H-Art-Src>)
 *
 ********************************************************************************************/
 
