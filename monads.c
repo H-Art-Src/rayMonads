@@ -88,9 +88,11 @@ enum
 // 2. rootSubLinks can only have starting dots that exist within rootSubDots.
 // 3. Links cannot comprise of dots of different depths.
 // 4. Only one combination of a link can exist in totality.
+#define MONAD_NAME_SIZE 32
+#define MONAD_LINK_MIDDLE_LERP 0.35f
 typedef struct structDot
 {
-    char name[32];
+    char name[MONAD_NAME_SIZE];
     Vector2 avgCenter , defaultCenter;
     struct structDot* rootSubDots;
     struct structDot* prev;
@@ -351,7 +353,7 @@ struct structActiveResult RecursiveDraw(structDot* dotPtr , int functionDepth , 
                 }
                 else
                 {
-                    Vector2 midPoint = Vector2Lerp(iterator->startDot->avgCenter , iterator->endDot->avgCenter , 0.5f);
+                    Vector2 midPoint = Vector2Lerp(iterator->startDot->avgCenter , iterator->endDot->avgCenter , MONAD_LINK_MIDDLE_LERP);
                     linkHit = CheckCollisionPointCircle( GetMousePosition() , midPoint , 30.0f );
                     DrawLineBezier(iterator->startDot->avgCenter , midPoint ,  2.0f , linkHit ? PURPLE : BLUE);
                     DrawLineBezier(midPoint , iterator->endDot->avgCenter ,  1.0f ,  SameCategory( iterator->endDot , iterator->startDot ) ? BLACK : RED);
@@ -479,11 +481,11 @@ int main(void)
     GodDot.defaultCenter = GodDot.avgCenter;
     GodDot.prev = &GodDot;
     GodDot.next = &GodDot;
-    strcpy(GodDot.name , "God Dot");
+    strcpy(GodDot.name , "Monad 0");
     
+    char monadLog[MONAD_NAME_SIZE*3] = "Session started.";
     structDot* selectedDot = NULL;
     structLink* selectedLink = NULL;
-    Vector2 cameraPosition;
     int selectedDepth = 0;
     structActiveResult mainResult =  (structActiveResult){0};
     //--------------------------------------------------------------------------------------
@@ -503,32 +505,60 @@ int main(void)
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
-        if (selectedLink && selectedDot && IsKeyPressed(KEY_DELETE))
-        {
-            if (RemoveLink(selectedLink , selectedDot))
-                selectedLink = NULL;
-        }
-        else if (selectedDot && IsKeyPressed(KEY_DELETE))
-       {
-            if (selectedDot != &GodDot) 
+        if (selectedDot)
+        { 
+            if (selectedLink && IsKeyPressed(KEY_DELETE))
+            {
+                strcpy(monadLog , "Link [");
+                strcat(monadLog , selectedLink->startDot->name);
+                strcat(monadLog , "] -> [");
+                strcat(monadLog , selectedLink->endDot->name);
+                if (RemoveLink(selectedLink , selectedDot))
+                    {
+                        selectedLink = NULL;
+                        strcat(monadLog , "] deleted.");
+                    }
+                else
+                    strcat(monadLog , "] failed to delete.");
+            }
+            else if (IsKeyPressed(KEY_DELETE) && selectedDot != &GodDot)
+            {
+                strcpy(monadLog , "Deleting object [");
+                strcat(monadLog , selectedDot->name);
+                strcat(monadLog , "].");
                 selectedDot->deleteFrame = DELETE_PRELINK;
-            selectedDot = NULL;
-       }
-       else if (IsKeyPressed(KEY_B) && selectedDot)
-       {
-           selectedDot->deleteFrame = DELETE_ONLYLINK;
-       }
+            }
+           else if (IsKeyPressed(KEY_B))
+            {
+                strcpy(monadLog , "Broke all links from and to [");
+                strcat(monadLog , selectedDot->name);
+                strcat(monadLog , "].");
+                selectedDot->deleteFrame = DELETE_ONLYLINK;
+            }
+           else if (IsKeyPressed(KEY_V))
+            {
+                strcpy(monadLog , "Renamed [");
+                strcat(monadLog , selectedDot->name);
+                strcat(monadLog , "] to [");
+                strncpy(selectedDot->name , GetClipboardText() , MONAD_NAME_SIZE);
+                selectedDot->name[MONAD_NAME_SIZE - 1] = '\0'; //ensures NULL termination.
+                strcat(monadLog , selectedDot->name);
+                strcat(monadLog , "].");
+            }
+        }
         
         BeginDrawing();
             ClearBackground(RAYWHITE);
 
             mainResult = RecursiveDraw(&GodDot  , 0 , selectedDepth);
 
+            DrawText( monadLog , 48 , 16, 16 , GRAY);
+
             if(selectedDot)
             {
                 int determineMode = selectedDot->depth - selectedDepth;
                 DrawText( !determineMode ? "Adding" : determineMode == 1 ? "Linking" : "Edit Only" , 32, 32, 20, SKYBLUE);
-                DrawPoly(selectedDot->avgCenter, 8 ,  2.0f ,   0 , RED);
+                DrawPoly(selectedDot->avgCenter, 4 ,  2.0f ,   0 , RED);
             }
             else
             {
@@ -537,7 +567,7 @@ int main(void)
             if(selectedLink)
             {
                 DrawText("Edit Link" , 32, 64, 20, PURPLE);
-                Vector2 midPoint = Vector2Lerp(selectedLink->startDot->avgCenter , selectedLink->endDot->avgCenter , 0.5f);
+                Vector2 midPoint = Vector2Lerp(selectedLink->startDot->avgCenter , selectedLink->endDot->avgCenter , MONAD_LINK_MIDDLE_LERP);
                 DrawLineBezier(selectedLink->startDot->avgCenter , midPoint ,  4.0f , Fade(RED,0.5f));
                 DrawLineBezier(midPoint , selectedLink->endDot->avgCenter ,  2.0f ,  Fade(SameCategory( selectedLink->endDot , selectedLink->startDot ) ? RED : PURPLE , 0.5f) );
                 DrawRectangleV(midPoint , (Vector2){25.0f,25.0f}, Fade(RED , 0.5f));
@@ -570,9 +600,12 @@ int main(void)
                             AddLink(mainResult.resultDot , selectedDot , mainResult.resultContainerDot);
                         selectedDot = mainResult.resultDot;
                    }
-                   else if (!mainResult.resultDot && selectedDepth == selectedDot->depth)
+                   else if (selectedDepth == selectedDot->depth)
                    {
-                        AddDot(GetMousePosition() ,  selectedDot);
+                        if (!mainResult.resultDot)
+                            AddDot(GetMousePosition() ,  selectedDot);
+                        else if (selectedLink && selectedLink->startDot->depth == mainResult.resultDot->depth)
+                            selectedLink->endDot = mainResult.resultDot;
                    }
                 }
             break;
