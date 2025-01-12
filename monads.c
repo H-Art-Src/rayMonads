@@ -112,7 +112,7 @@ struct structDot *AddDot(Vector2 canvasPosition , structDot *containingDotPtr)
     {
         structDot *rootNextPtrUnchanged = rootPtr->next;
         structDot *rootPrevPtrUnchanged = rootPtr->prev;
-        if (rootPtr == rootNextPtrUnchanged || rootPtr == rootPrevPtrUnchanged) //after one entry
+        if ( (rootPtr == rootNextPtrUnchanged) || (rootPtr == rootPrevPtrUnchanged) ) //after one entry
         {
             newDotPtr->next = rootPtr;
             newDotPtr->prev = rootPtr;
@@ -346,7 +346,7 @@ struct structActiveResult RecursiveDraw(structDot *dotPtr , int functionDepth , 
 
             if ( (iterator->startDot->deleteFrame >= DELETE_POSTONLYLINK) || (iterator->endDot->deleteFrame >= DELETE_POSTONLYLINK) )
             {
-                if (RemoveLink(iterator , dotPtr) && !(rootLinkPtr = dotPtr->rootSubLinks))
+                if ( RemoveLink(iterator , dotPtr) && !(rootLinkPtr = dotPtr->rootSubLinks) )
                 {
                     break;
                 }
@@ -367,7 +367,7 @@ struct structActiveResult RecursiveDraw(structDot *dotPtr , int functionDepth , 
             
             if (iterator->deleteFrame >= DELETE_FINAL)
             {
-                if (RemoveDot(iterator ,  dotPtr) && !(rootDotPtr = dotPtr->rootSubDots))
+                if ( RemoveDot(iterator ,  dotPtr) && !(rootDotPtr = dotPtr->rootSubDots) )
                 {    
                     break;
                 }
@@ -411,12 +411,12 @@ struct structActiveResult RecursiveDraw(structDot *dotPtr , int functionDepth , 
         dotPtr->deleteFrame--;
     }
 
-   // cancel any more drawing.
+   //cancel any more drawing.
     if (OUTSCOPED)
         return (structActiveResult){0};
 
     //we have returned back to the container, since this is null, we know that this is the container.
-    if (!activeResult.resultContainerDot && activeResult.resultDot != dotPtr)
+    if ( !activeResult.resultContainerDot && (activeResult.resultDot != dotPtr) )
         activeResult.resultContainerDot = dotPtr;
 
     if (INSCOPE)
@@ -427,7 +427,7 @@ struct structActiveResult RecursiveDraw(structDot *dotPtr , int functionDepth , 
     }
     else if (PRESCOPE)
     {
-        DrawCircleLinesV(dotPtr->avgCenter , dotPtr->radius , Fade(GRAY , (float){functionDepth} / (float){selectedDepth}) );
+        DrawCircleLinesV(dotPtr->avgCenter , dotPtr->radius , Fade(GRAY , (float){functionDepth}/(float){selectedDepth}) );
     }
     else if (SUBSCOPE)
     {     
@@ -554,7 +554,7 @@ int main(void)
 
             for (int m = 1, d = 1 ; m <= selectedDepth ; m *= 10 , d++)
             {
-                char digit[2] = {'0' + (selectedDepth / m) % 10 ,  0};
+                char digit[2] = {'0' + (selectedDepth/m)%10 ,  0};
                 DrawText(digit, GetScreenWidth() - 32*d , 64 , 20 , SKYBLUE);
             }
         EndDrawing();
