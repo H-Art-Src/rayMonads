@@ -45,32 +45,32 @@ enum
     DELETE_FINAL
 };
 
-// 1. A dot cannot have multiple container dots.
-// 2. rootSubLinks can only have starting dots that exist within rootSubDots.
-// 3. Links cannot comprise of dots of different depths.
+// 1. A Monad cannot have multiple container Monads.
+// 2. rootSubLink can only have starting Monads that exist within rootSubMonads.
+// 3. Link cannot comprise of Monads of different depths.
 // 4. Only one combination of a link can exist in totality.
 #define MONAD_NAME_SIZE 32
 #define MONAD_LINK_MIDDLE_LERP 0.35f
-typedef struct structDot
+typedef struct Monad
 {
     char name[MONAD_NAME_SIZE];
     Vector2 avgCenter , defaultCenter;
-    struct structDot *rootSubDots;
-    struct structDot *prev;
-    struct structDot *next;
-    struct structLink *rootSubLinks;
+    struct Monad *rootSubMonads;
+    struct Monad *prev;
+    struct Monad *next;
+    struct Link *rootSubLink;
     float radius;
     int depth;
     int deleteFrame;
-}  structDot;
+}  Monad;
 
-typedef struct structLink
+typedef struct Link
 {
-    struct structDot *startDot;
-    struct structDot *endDot;
-    struct structLink *prev;
-    struct structLink *next;
-} structLink;
+    struct Monad *startMonad;
+    struct Monad *endMonad;
+    struct Link *prev;
+    struct Link *next;
+} Link;
 
 enum Response
 {
@@ -79,156 +79,156 @@ enum Response
     RESULT_RCLICK
 };
 
-typedef struct structActiveResult
+typedef struct ActiveResult
 {
-   struct structDot *resultDot;
-   struct structDot *resultContainerDot;
-   struct structLink *resultLink;
+   struct Monad *resultMonad;
+   struct Monad *resultContainerMonad;
+   struct Link *resultLink;
    int resultKey , resultDepth;
-} structActiveResult;
+} ActiveResult;
 
-// Adds an object (subdot) to ContainingDotPtr. ContainingDotPtr must not be null.
-struct structDot *AddDot(Vector2 canvasPosition , structDot *containingDotPtr)
+// Adds an object (subMonad) to ContainingMonadPtr. ContainingMonadPtr must not be null.
+struct Monad *AddMonad(Vector2 canvasPosition , Monad *containingMonadPtr)
 {
-    if (Vector2Distance(canvasPosition , containingDotPtr->avgCenter) <= 30.0f) //deny if too close to container.
+    if (Vector2Distance(canvasPosition , containingMonadPtr->avgCenter) <= 30.0f) //deny if too close to container.
         return NULL;
      
-    //malloc and initialize new dot. Always initialize variables that are not being overwritten.
-    structDot *newDotPtr = (structDot*) malloc(sizeof(structDot));
-    newDotPtr->defaultCenter = canvasPosition;
-    newDotPtr->avgCenter = canvasPosition;
-    newDotPtr->rootSubDots = NULL;
-    newDotPtr->rootSubLinks = NULL;
-    newDotPtr->radius = 10.0f;
-    newDotPtr->depth = containingDotPtr->depth + 1;
-    newDotPtr->deleteFrame = DELETE_OFF;
+    //malloc and initialize new Monad. Always initialize variables that are not being overwritten.
+    Monad *newMonadPtr = (Monad*) malloc(sizeof(Monad));
+    newMonadPtr->defaultCenter = canvasPosition;
+    newMonadPtr->avgCenter = canvasPosition;
+    newMonadPtr->rootSubMonads = NULL;
+    newMonadPtr->rootSubLink = NULL;
+    newMonadPtr->radius = 10.0f;
+    newMonadPtr->depth = containingMonadPtr->depth + 1;
+    newMonadPtr->deleteFrame = DELETE_OFF;
     
-    newDotPtr->name[0] = (containingDotPtr->rootSubDots)? containingDotPtr->rootSubDots->prev->name[0] + 1 : 'A';
-    newDotPtr->name[1] = 0;
+    newMonadPtr->name[0] = (containingMonadPtr->rootSubMonads)? containingMonadPtr->rootSubMonads->prev->name[0] + 1 : 'A';
+    newMonadPtr->name[1] = 0;
     
-    //insert new dot in list entry.
-    structDot *rootPtr = containingDotPtr->rootSubDots;
+    //insert new Monad in list entry.
+    Monad *rootPtr = containingMonadPtr->rootSubMonads;
     if (rootPtr) //has entries.
     {
-        structDot *rootNextPtrUnchanged = rootPtr->next;
-        structDot *rootPrevPtrUnchanged = rootPtr->prev;
+        Monad *rootNextPtrUnchanged = rootPtr->next;
+        Monad *rootPrevPtrUnchanged = rootPtr->prev;
         if ( (rootPtr == rootNextPtrUnchanged) || (rootPtr == rootPrevPtrUnchanged) ) //after one entry
         {
-            newDotPtr->next = rootPtr;
-            newDotPtr->prev = rootPtr;
-            rootPtr->next = newDotPtr;
-            rootPtr->prev = newDotPtr;
+            newMonadPtr->next = rootPtr;
+            newMonadPtr->prev = rootPtr;
+            rootPtr->next = newMonadPtr;
+            rootPtr->prev = newMonadPtr;
         }
         else //after two or more entries.
         {
-            newDotPtr->next = rootPtr;
-            newDotPtr->prev = rootPrevPtrUnchanged;
-            rootPtr->prev = newDotPtr;
-            rootPrevPtrUnchanged->next = newDotPtr;
+            newMonadPtr->next = rootPtr;
+            newMonadPtr->prev = rootPrevPtrUnchanged;
+            rootPtr->prev = newMonadPtr;
+            rootPrevPtrUnchanged->next = newMonadPtr;
         }
     }
     else //after zero entries
     {
-        containingDotPtr->rootSubDots = rootPtr = newDotPtr;
-        rootPtr->next = newDotPtr;
-        rootPtr->prev = newDotPtr;
+        containingMonadPtr->rootSubMonads = rootPtr = newMonadPtr;
+        rootPtr->next = newMonadPtr;
+        rootPtr->prev = newMonadPtr;
     }
     
-    //containing dot data
-    float prospectDistance = Vector2Distance(containingDotPtr->avgCenter , canvasPosition)*1.5f;
-    if (prospectDistance > containingDotPtr->radius)
+    //containing Monad data
+    float prospectDistance = Vector2Distance(containingMonadPtr->avgCenter , canvasPosition)*1.5f;
+    if (prospectDistance > containingMonadPtr->radius)
     {
-        containingDotPtr->radius = prospectDistance;
+        containingMonadPtr->radius = prospectDistance;
     }
-    containingDotPtr->avgCenter = Vector2Scale(Vector2Add(containingDotPtr->avgCenter , canvasPosition) , 0.5f);
+    containingMonadPtr->avgCenter = Vector2Scale(Vector2Add(containingMonadPtr->avgCenter , canvasPosition) , 0.5f);
     
-    return newDotPtr;
+    return newMonadPtr;
 }
 
-//Recursively frees the object and its links after calling the function for its sub-objects.
-void  RemoveSubDotsRecursive(structDot *dotPtr)
+//Recursively frees the object and its Link after calling the function for its sub-objects.
+void  RemoveSubMonadsRecursive(Monad *MonadPtr)
 {
-    structDot *rootDot = dotPtr->rootSubDots;
-    if (rootDot)
+    Monad *rootMonad = MonadPtr->rootSubMonads;
+    if (rootMonad)
     {
-        structDot *iterator = rootDot;
+        Monad *iterator = rootMonad;
         do
         {
-            structDot *nextDot = iterator->next;
-            RemoveSubDotsRecursive(iterator);
-            iterator = nextDot;
-        } while (iterator != rootDot);
+            Monad *nextMonad = iterator->next;
+            RemoveSubMonadsRecursive(iterator);
+            iterator = nextMonad;
+        } while (iterator != rootMonad);
     }
     
-    structLink *rootLink = dotPtr->rootSubLinks;
+    Link *rootLink = MonadPtr->rootSubLink;
     if (rootLink)
     {
-        structLink *iterator = rootLink;
+        Link *iterator = rootLink;
         do
         {
-            structLink *nextLink = iterator->next;
+            Link *nextLink = iterator->next;
             free(iterator);
             iterator = nextLink;
         } while (iterator != rootLink);
     }
 
-    free(dotPtr);
+    free(MonadPtr);
 }
 
-//Remove an object (subdot) from containingDotPtr. containingDotPtr must not be null.
-bool RemoveDot(structDot *dotPtr , structDot *containingDotPtr)
+//Remove an object (subMonad) from containingMonadPtr. containingMonadPtr must not be null.
+bool RemoveMonad(Monad *MonadPtr , Monad *containingMonadPtr)
 {
-    structDot *rootDot = containingDotPtr->rootSubDots;
-    if (rootDot)
+    Monad *rootMonad = containingMonadPtr->rootSubMonads;
+    if (rootMonad)
     {
-        structDot *iterator = rootDot;
+        Monad *iterator = rootMonad;
         do
         {
-            if (iterator == dotPtr)
+            if (iterator == MonadPtr)
             {
-                if (rootDot == rootDot->next) //is root and sole sub dot.
-                    containingDotPtr->rootSubDots = NULL;
-                else if (rootDot == iterator) //is root and NOT sole sub dot.
-                    containingDotPtr->rootSubDots = rootDot->next;
+                if (rootMonad == rootMonad->next) //is root and sole sub Monad.
+                    containingMonadPtr->rootSubMonads = NULL;
+                else if (rootMonad == iterator) //is root and NOT sole sub Monad.
+                    containingMonadPtr->rootSubMonads = rootMonad->next;
                 iterator->next->prev = iterator->prev;
                 iterator->prev->next = iterator->next;
-                RemoveSubDotsRecursive(iterator);
+                RemoveSubMonadsRecursive(iterator);
                 return true;
             }
             iterator = iterator->next;
-        } while (iterator != rootDot);
+        } while (iterator != rootMonad);
     }
     return false;
 }
 
-// Checks if two dots are of the same category.
-bool SameCategory(structDot *dotPtr , structDot *dotMatePtr)
+// Checks if two Monads are of the same category.
+bool SameCategory(Monad *MonadPtr , Monad *MonadMatePtr)
 {
-    structDot *iterator = dotMatePtr;
+    Monad *iterator = MonadMatePtr;
     if (iterator)
     {
         do
         {
-            if (iterator == dotPtr)
+            if (iterator == MonadPtr)
                 return true;
             iterator = iterator->next;
-        } while (iterator != dotMatePtr);
+        } while (iterator != MonadMatePtr);
     }
     return false;
 }
 
 //All parameters must not be null.
-struct structLink *AddLink(structDot *start ,  structDot *end , structDot *containingDotPtr)
+struct Link *AddLink(Monad *start ,  Monad *end , Monad *containingMonadPtr)
 {
-    structLink *rootPtr = containingDotPtr->rootSubLinks;
+    Link *rootPtr = containingMonadPtr->rootSubLink;
 
     //Return nothing if it already exists
     if (rootPtr) //has entries.
     {
-        structLink *iterator = rootPtr;
+        Link *iterator = rootPtr;
         do
         {
-            if ( (iterator->startDot == start) && (iterator->endDot == end) )
+            if ( (iterator->startMonad == start) && (iterator->endMonad == end) )
             {
                 printf("Link already exists.\n");
                 return NULL;
@@ -237,15 +237,15 @@ struct structLink *AddLink(structDot *start ,  structDot *end , structDot *conta
         } while (iterator != rootPtr);
     }
     //malloc and initialize new Link. Always initialize variables that are not being overwritten.
-    structLink *newLinkPtr = (structLink*) malloc(sizeof(structLink));
-    newLinkPtr->startDot = start;
-    newLinkPtr->endDot = end;
+    Link *newLinkPtr = (Link*) malloc(sizeof(Link));
+    newLinkPtr->startMonad = start;
+    newLinkPtr->endMonad = end;
         
     //insert new Link in list entry.
     if (rootPtr) //has entries.
     {
-        structLink *rootNextPtrUnchanged = rootPtr->next;
-        structLink *rootPrevPtrUnchanged = rootPtr->prev;
+        Link *rootNextPtrUnchanged = rootPtr->next;
+        Link *rootPrevPtrUnchanged = rootPtr->prev;
         if ( (rootPtr == rootNextPtrUnchanged) || (rootPtr == rootPrevPtrUnchanged) ) //after one entry
         {
             newLinkPtr->next = rootPtr;
@@ -263,27 +263,27 @@ struct structLink *AddLink(structDot *start ,  structDot *end , structDot *conta
     }
     else //after zero entries
     {
-        containingDotPtr->rootSubLinks = rootPtr = newLinkPtr;
+        containingMonadPtr->rootSubLink = rootPtr = newLinkPtr;
         rootPtr->next = newLinkPtr;
         rootPtr->prev = newLinkPtr;
     }    
     return newLinkPtr;
 }
 
-bool RemoveLink(structLink *linkPtr , structDot *containingDotPtr)
+bool RemoveLink(Link *linkPtr , Monad *containingMonadPtr)
 {
-    structLink *rootLink = containingDotPtr->rootSubLinks;
+    Link *rootLink = containingMonadPtr->rootSubLink;
     if (rootLink)
     {
-        structLink *iterator = rootLink;
+        Link *iterator = rootLink;
         do
         {
             if (iterator == linkPtr)
             {
                 if (rootLink == rootLink->next) //is root and sole sub Link.
-                    containingDotPtr->rootSubLinks = NULL;
+                    containingMonadPtr->rootSubLink = NULL;
                 else if (rootLink == iterator) //is root and NOT sole sub Link.
-                    containingDotPtr->rootSubLinks = rootLink->next;
+                    containingMonadPtr->rootSubLink = rootLink->next;
                 iterator->next->prev = iterator->prev;
                 iterator->prev->next = iterator->next;
                 free(iterator);
@@ -295,58 +295,57 @@ bool RemoveLink(structLink *linkPtr , structDot *containingDotPtr)
     return false;
 }
 
-//Renders all dots and links. Returns activated dot, it's container, if any and the depth. dotPtr must not be null.
+//Renders all Monads and Link. Returns activated Monad, it's container, if any and the depth. MonadPtr must not be null.
 //TODO: Every recursive call adds all of the instructions of the function to RAM again. Which parts of this function can be separated into its own function so they don't get loaded in every time?
 //Or maybe... the compiler catches it already.
 #define OUTSCOPED functionDepth > selectedDepth + 1
 #define SUBSCOPE functionDepth == selectedDepth + 1
 #define INSCOPE functionDepth == selectedDepth
 #define PRESCOPE functionDepth < selectedDepth
-struct structActiveResult RecursiveDraw(structDot *dotPtr , int functionDepth , int selectedDepth)
+struct ActiveResult RecursiveDraw(Monad *MonadPtr , int functionDepth , int selectedDepth)
 {
     //check collision with mouse, generate first part of activeResult.
-    structActiveResult activeResult = (structActiveResult){0};
+    ActiveResult activeResult = (ActiveResult){0};
     activeResult.resultKey = (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))? RESULT_CLICK : ((IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))? RESULT_RCLICK : RESULT_NONE);
     activeResult.resultDepth = functionDepth;
-    if ( (functionDepth >= selectedDepth) && CheckCollisionPointCircle( GetMousePosition() , dotPtr->avgCenter , 30.0f))
+    if ( (functionDepth >= selectedDepth) && CheckCollisionPointCircle( GetMousePosition() , MonadPtr->avgCenter , 30.0f))
     {
-        activeResult.resultDot = dotPtr;
+        activeResult.resultMonad = MonadPtr;
     }
 
      //iterate through the functors in the category.
-    structLink *rootLinkPtr = dotPtr->rootSubLinks;
+    Link *rootLinkPtr = MonadPtr->rootSubLink;
     if (rootLinkPtr)
     {
-        structLink *iterator = rootLinkPtr;
+        Link *iterator = rootLinkPtr;
         do
         {
             if (INSCOPE)
             {
                 bool linkHit = false;
-                if (iterator->startDot == iterator->endDot)
+                if (iterator->startMonad == iterator->endMonad)
                 {
-                    linkHit = CheckCollisionPointCircle( GetMousePosition() , Vector2Add(iterator->startDot->avgCenter , (Vector2){15.0f,15.0f}) , 30.0f);
-                    DrawRectangleV(iterator->startDot->avgCenter , (Vector2){10.0f,10.0f}, (linkHit)? RED : BLACK);
+                    linkHit = CheckCollisionPointCircle( GetMousePosition() , Vector2Add(iterator->startMonad->avgCenter , (Vector2){15.0f,15.0f}) , 30.0f);
+                    DrawRectangleV(iterator->startMonad->avgCenter , (Vector2){10.0f,10.0f}, (linkHit)? RED : BLACK);
                 }
                 else
                 {
-                    Vector2 midPoint = Vector2Lerp(iterator->startDot->avgCenter , iterator->endDot->avgCenter , MONAD_LINK_MIDDLE_LERP);
+                    Vector2 midPoint = Vector2Lerp(iterator->startMonad->avgCenter , iterator->endMonad->avgCenter , MONAD_LINK_MIDDLE_LERP);
                     linkHit = CheckCollisionPointCircle( GetMousePosition() , midPoint , 30.0f );
-                    DrawLineBezier(iterator->startDot->avgCenter , midPoint ,  2.0f , (linkHit)? PURPLE : BLUE);
-                    DrawLineBezier(midPoint , iterator->endDot->avgCenter ,  1.0f ,  (SameCategory( iterator->endDot , iterator->startDot ))? BLACK : RED);
+                    DrawLineBezier(iterator->startMonad->avgCenter , midPoint ,  2.0f , (linkHit)? PURPLE : BLUE);
+                    DrawLineBezier(midPoint , iterator->endMonad->avgCenter ,  1.0f ,  (SameCategory( iterator->endMonad , iterator->startMonad ))? BLACK : RED);
                 }
                 if (linkHit)
                 {
                     activeResult.resultLink = iterator;
-                    activeResult.resultDot = dotPtr;
+                    activeResult.resultMonad = MonadPtr;
                 }
             }
             
-            structLink *nextSaved = iterator->next;
-
-            if ( (iterator->startDot->deleteFrame >= DELETE_POSTONLYLINK) || (iterator->endDot->deleteFrame >= DELETE_POSTONLYLINK) )
+            Link *nextSaved = iterator->next;
+            if ( (iterator->startMonad->deleteFrame >= DELETE_POSTONLYLINK) || (iterator->endMonad->deleteFrame >= DELETE_POSTONLYLINK) )
             {
-                if ( RemoveLink(iterator , dotPtr) && !(rootLinkPtr = dotPtr->rootSubLinks) )
+                if ( RemoveLink(iterator , MonadPtr) && !(rootLinkPtr = MonadPtr->rootSubLink) )
                 {
                     break;
                 }
@@ -357,85 +356,85 @@ struct structActiveResult RecursiveDraw(structDot *dotPtr , int functionDepth , 
     }
  
     //iterate through the objects with this object treated as a category.
-    structDot *rootDotPtr = dotPtr->rootSubDots;
-    if (rootDotPtr)
+    Monad *rootMonadPtr = MonadPtr->rootSubMonads;
+    if (rootMonadPtr)
     {
-        structDot *iterator = rootDotPtr;
+        Monad *iterator = rootMonadPtr;
         do
         {
-            structDot *next = iterator->next;
+            Monad *next = iterator->next;
             
             if (iterator->deleteFrame >= DELETE_FINAL)
             {
-                if ( RemoveDot(iterator ,  dotPtr) && !(rootDotPtr = dotPtr->rootSubDots) )
+                if ( RemoveMonad(iterator ,  MonadPtr) && !(rootMonadPtr = MonadPtr->rootSubMonads) )
                 {    
                     break;
                 }
                 else
-                    DrawLineV(dotPtr->avgCenter , iterator->avgCenter , RED); // something went wrong if still shows.
+                    DrawLineV(MonadPtr->avgCenter , iterator->avgCenter , RED); // something went wrong if still shows.
                 iterator = next;
                 continue;
             }
             else if (INSCOPE)
             {
-                DrawLineV(dotPtr->avgCenter , iterator->avgCenter , (iterator == rootDotPtr)? VIOLET : GREEN);
-                DrawLineV(next->avgCenter , iterator->avgCenter , Fade((iterator == rootDotPtr->prev)? ORANGE : YELLOW , 0.5f));
+                DrawLineV(MonadPtr->avgCenter , iterator->avgCenter , (iterator == rootMonadPtr)? VIOLET : GREEN);
+                DrawLineV(next->avgCenter , iterator->avgCenter , Fade((iterator == rootMonadPtr->prev)? ORANGE : YELLOW , 0.5f));
             }
 
             //--------------------------------
-            structActiveResult activeOveride = RecursiveDraw(iterator , functionDepth + 1 , selectedDepth);
+            ActiveResult activeOveride = RecursiveDraw(iterator , functionDepth + 1 , selectedDepth);
             //--------------------------------
 
-            if (activeOveride.resultDot && !activeResult.resultLink)
+            if (activeOveride.resultMonad && !activeResult.resultLink)
             {
                 activeResult = activeOveride;
             }
             else if (activeOveride.resultLink)
             {
                 activeResult.resultLink = activeOveride.resultLink;
-                activeResult.resultDot = dotPtr;
+                activeResult.resultMonad = MonadPtr;
             }
 
             iterator = next;
-        } while (iterator != rootDotPtr);
+        } while (iterator != rootMonadPtr);
     }
   
     //mark for deletion progression
-    if (dotPtr->deleteFrame >= DELETE_PRELINK)
+    if (MonadPtr->deleteFrame >= DELETE_PRELINK)
     {
-            dotPtr->deleteFrame++;
-            return (structActiveResult){0};
+            MonadPtr->deleteFrame++;
+            return (ActiveResult){0};
     }
-    else if (dotPtr->deleteFrame >= DELETE_POSTONLYLINK)
+    else if (MonadPtr->deleteFrame >= DELETE_POSTONLYLINK)
     {
-        dotPtr->deleteFrame--;
+        MonadPtr->deleteFrame--;
     }
 
    //cancel any more drawing.
     if (OUTSCOPED)
-        return (structActiveResult){0};
+        return (ActiveResult){0};
 
     //we have returned back to the container, since this is null, we know that this is the container.
-    if ( !activeResult.resultContainerDot && (activeResult.resultDot != dotPtr) )
-        activeResult.resultContainerDot = dotPtr;
+    if ( !activeResult.resultContainerMonad && (activeResult.resultMonad != MonadPtr) )
+        activeResult.resultContainerMonad = MonadPtr;
 
     if (INSCOPE)
     {
-        //DrawCircleLinesV(dotPtr->avgCenter , dotPtr->radius , GREEN);
-        DrawPoly(dotPtr->avgCenter, 3 ,  5.0f ,   0 , PURPLE);
-        DrawText(dotPtr->name , dotPtr->avgCenter.x + 10 , dotPtr->avgCenter.y + 10 , 24 , Fade(PURPLE , 0.5f));
+        //DrawCircleLinesV(MonadPtr->avgCenter , MonadPtr->radius , GREEN);
+        DrawPoly(MonadPtr->avgCenter, 3 ,  5.0f ,   0 , PURPLE);
+        DrawText(MonadPtr->name , MonadPtr->avgCenter.x + 10 , MonadPtr->avgCenter.y + 10 , 24 , Fade(PURPLE , 0.5f));
     }
     else if (PRESCOPE)
     {
-        DrawCircleLinesV(dotPtr->avgCenter , dotPtr->radius , Fade(GRAY , (float){functionDepth}/(float){selectedDepth}) );
+        DrawCircleLinesV(MonadPtr->avgCenter , MonadPtr->radius , Fade(GRAY , (float){functionDepth}/(float){selectedDepth}) );
     }
     else if (SUBSCOPE)
     {     
-        DrawCircleV(dotPtr->avgCenter , 5.0f , BLUE);
-        DrawText(dotPtr->name , dotPtr->avgCenter.x + 10 , dotPtr->avgCenter.y + 10 , 16 , Fade(SKYBLUE , 0.5f));
+        DrawCircleV(MonadPtr->avgCenter , 5.0f , BLUE);
+        DrawText(MonadPtr->name , MonadPtr->avgCenter.x + 10 , MonadPtr->avgCenter.y + 10 , 16 , Fade(SKYBLUE , 0.5f));
     }
-    if (activeResult.resultDot == dotPtr)
-        DrawCircleLinesV(dotPtr->avgCenter , 20.0f , ORANGE); 
+    if (activeResult.resultMonad == MonadPtr)
+        DrawCircleLinesV(MonadPtr->avgCenter , 20.0f , ORANGE); 
 
     return activeResult;
 }
@@ -446,51 +445,51 @@ int main(void)
     //--------------------------------------------------------------------------------------
     const int screenWidth = 800;
     const int screenHeight = 800;
-    InitWindow(screenWidth, screenHeight, "Monads");
+    InitWindow(screenWidth, screenHeight, "Monad");
     SetTargetFPS(60);
     //--------------------------------------------------------------------------------------
 
     // Variables
     //--------------------------------------------------------------------------------------
-    structDot GodDot = (structDot){0};
-    GodDot.avgCenter.x = (float){screenWidth}/2.0;
-    GodDot.avgCenter.y = (float){screenHeight}/2.0;
-    GodDot.defaultCenter = GodDot.avgCenter;
-    GodDot.prev = &GodDot;
-    GodDot.next = &GodDot;
-    strcpy(GodDot.name , "Monad 0");
+    Monad GodMonad = (Monad){0};
+    GodMonad.avgCenter.x = (float){screenWidth}/2.0;
+    GodMonad.avgCenter.y = (float){screenHeight}/2.0;
+    GodMonad.defaultCenter = GodMonad.avgCenter;
+    GodMonad.prev = &GodMonad;
+    GodMonad.next = &GodMonad;
+    strcpy(GodMonad.name , "Monad 0");
     
     char monadLog[MONAD_NAME_SIZE*3] = "Session started.";
-    structDot *selectedDot = NULL;
-    structLink *selectedLink = NULL;
+    Monad *selectedMonad = NULL;
+    Link *selectedLink = NULL;
     int selectedDepth = 0;
-    structActiveResult mainResult =  (structActiveResult){0};
+    ActiveResult mainResult =  (ActiveResult){0};
     //--------------------------------------------------------------------------------------
 
     // Testing
     //--------------------------------------------------------------------------------------    
-    AddDot((Vector2){600,500}, &GodDot);
-    AddDot((Vector2){200,400}, &GodDot);
-    AddDot((Vector2){100,100} , AddDot((Vector2){350,200}, &GodDot));
+    AddMonad((Vector2){600,500}, &GodMonad);
+    AddMonad((Vector2){200,400}, &GodMonad);
+    AddMonad((Vector2){100,100} , AddMonad((Vector2){350,200}, &GodMonad));
 
-    structDot *example =  AddDot((Vector2){400,400}, &GodDot);
-    AddDot((Vector2){440,410}, example);
-    AddDot((Vector2){400,450}, example);
-    AddDot((Vector2){500,500}, example);
+    Monad *example =  AddMonad((Vector2){400,400}, &GodMonad);
+    AddMonad((Vector2){440,410}, example);
+    AddMonad((Vector2){400,450}, example);
+    AddMonad((Vector2){500,500}, example);
     //--------------------------------------------------------------------------------------
 
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
-        if (selectedDot)
+        if (selectedMonad)
         { 
             if (selectedLink && IsKeyPressed(KEY_DELETE))
             {
                 strcpy(monadLog , "Link [");
-                strcat(monadLog , selectedLink->startDot->name);
+                strcat(monadLog , selectedLink->startMonad->name);
                 strcat(monadLog , "] to [");
-                strcat(monadLog , selectedLink->endDot->name);
-                if (RemoveLink(selectedLink , selectedDot))
+                strcat(monadLog , selectedLink->endMonad->name);
+                if (RemoveLink(selectedLink , selectedMonad))
                     {
                         selectedLink = NULL;
                         strcat(monadLog , "] deleted.");
@@ -500,34 +499,34 @@ int main(void)
             }
             else if (IsKeyPressed(KEY_DELETE))
             {
-                if (selectedDot == &GodDot)
+                if (selectedMonad == &GodMonad)
                 {
                     strcpy(monadLog , "Cannot delete Monad 0.");
                 }
                 else
                 {
                     strcpy(monadLog , "Deleted object [");
-                    strcat(monadLog , selectedDot->name);
+                    strcat(monadLog , selectedMonad->name);
                     strcat(monadLog , "].");
-                    selectedDot->deleteFrame = DELETE_PRELINK;
-                    selectedDot = NULL;
+                    selectedMonad->deleteFrame = DELETE_PRELINK;
+                    selectedMonad = NULL;
                 }
             }
            else if (IsKeyPressed(KEY_B))
             {
                 strcpy(monadLog , "Broke all links from and to [");
-                strcat(monadLog , selectedDot->name);
+                strcat(monadLog , selectedMonad->name);
                 strcat(monadLog , "].");
-                selectedDot->deleteFrame = DELETE_ONLYLINK;
+                selectedMonad->deleteFrame = DELETE_ONLYLINK;
             }
            else if (IsKeyPressed(KEY_V))
             {
                 strcpy(monadLog , "Renamed [");
-                strcat(monadLog , selectedDot->name);
+                strcat(monadLog , selectedMonad->name);
                 strcat(monadLog , "] to [");
-                strncpy(selectedDot->name , GetClipboardText() , MONAD_NAME_SIZE);
-                selectedDot->name[MONAD_NAME_SIZE - 1] = '\0'; //ensures NULL termination.
-                strcat(monadLog , selectedDot->name);
+                strncpy(selectedMonad->name , GetClipboardText() , MONAD_NAME_SIZE);
+                selectedMonad->name[MONAD_NAME_SIZE - 1] = '\0'; //ensures NULL termination.
+                strcat(monadLog , selectedMonad->name);
                 strcat(monadLog , "].");
             }
         }
@@ -535,15 +534,15 @@ int main(void)
         BeginDrawing();
             ClearBackground(RAYWHITE);
 
-            mainResult = RecursiveDraw(&GodDot  , 0 , selectedDepth);
+            mainResult = RecursiveDraw(&GodMonad  , 0 , selectedDepth);
 
             DrawText( monadLog , 48 , 8 , 20 , GRAY);
 
-            if (selectedDot)
+            if (selectedMonad)
             {
-                int determineMode = selectedDot->depth - selectedDepth;
+                int determineMode = selectedMonad->depth - selectedDepth;
                 DrawText(( !determineMode)? "Adding" : (determineMode == 1)? "Linking" : "Edit Only" , 32, 32, 20, SKYBLUE);
-                DrawPoly(selectedDot->avgCenter, 3 ,  10.0f ,   0 ,  Fade(RED , 0.5f));
+                DrawPoly(selectedMonad->avgCenter, 3 ,  10.0f ,   0 ,  Fade(RED , 0.5f));
             }
             else
             {
@@ -553,9 +552,9 @@ int main(void)
             if (selectedLink)
             {
                 DrawText("Edit Link" , 32, 64, 20, PURPLE);
-                Vector2 midPoint = Vector2Lerp(selectedLink->startDot->avgCenter , selectedLink->endDot->avgCenter , MONAD_LINK_MIDDLE_LERP);
-                DrawLineBezier(selectedLink->startDot->avgCenter , midPoint ,  4.0f , Fade(RED,0.5f));
-                DrawLineBezier(midPoint , selectedLink->endDot->avgCenter ,  2.0f ,  Fade((SameCategory( selectedLink->endDot , selectedLink->startDot ))? RED : PURPLE , 0.5f) );
+                Vector2 midPoint = Vector2Lerp(selectedLink->startMonad->avgCenter , selectedLink->endMonad->avgCenter , MONAD_LINK_MIDDLE_LERP);
+                DrawLineBezier(selectedLink->startMonad->avgCenter , midPoint ,  4.0f , Fade(RED,0.5f));
+                DrawLineBezier(midPoint , selectedLink->endMonad->avgCenter ,  2.0f ,  Fade((SameCategory( selectedLink->endMonad , selectedLink->startMonad ))? RED : PURPLE , 0.5f) );
                 DrawRectangleV(midPoint , (Vector2){25.0f,25.0f}, Fade(RED , 0.5f));
             }
 
@@ -571,42 +570,42 @@ int main(void)
             case RESULT_NONE:
             break;
             case RESULT_CLICK:
-                selectedDot = mainResult.resultDot;
+                selectedMonad = mainResult.resultMonad;
                 selectedLink = mainResult.resultLink;
-                printf("Object %p, Link %p\n" , selectedDot , selectedLink);
+                printf("Object %p, Link %p\n" , selectedMonad , selectedLink);
             break;
             case RESULT_RCLICK:
-                if (selectedDot)
+                if (selectedMonad)
                 {
-                   if ( mainResult.resultDot && mainResult.resultContainerDot && (mainResult.resultDepth == selectedDot->depth) )
+                   if ( mainResult.resultMonad && mainResult.resultContainerMonad && (mainResult.resultDepth == selectedMonad->depth) )
                    {
-                       if (SameCategory(selectedDot , mainResult.resultDot))
-                            selectedLink = AddLink(selectedDot , mainResult.resultDot , mainResult.resultContainerDot);
+                       if (SameCategory(selectedMonad , mainResult.resultMonad))
+                            selectedLink = AddLink(selectedMonad , mainResult.resultMonad , mainResult.resultContainerMonad);
                         else
-                            selectedLink = AddLink(mainResult.resultDot , selectedDot , mainResult.resultContainerDot);
+                            selectedLink = AddLink(mainResult.resultMonad , selectedMonad , mainResult.resultContainerMonad);
                         if (selectedLink)
                         {
                             strcpy(monadLog , "Added link [");
-                            strcat(monadLog , selectedLink->startDot->name);
+                            strcat(monadLog , selectedLink->startMonad->name);
                             strcat(monadLog , "] to [");
-                            strcat(monadLog , selectedLink->endDot->name);
+                            strcat(monadLog , selectedLink->endMonad->name);
                             strcat(monadLog , "].");
                         }
-                        selectedDot = mainResult.resultDot;
+                        selectedMonad = mainResult.resultMonad;
                         selectedLink = NULL;
                    }
-                   else if (selectedDepth == selectedDot->depth)
+                   else if (selectedDepth == selectedMonad->depth)
                    {
-                        if (!mainResult.resultDot)
+                        if (!mainResult.resultMonad)
                         {
                             strcpy(monadLog , "Added object [");
-                            strcat(monadLog , AddDot(GetMousePosition() ,  selectedDot)->name);
+                            strcat(monadLog , AddMonad(GetMousePosition() ,  selectedMonad)->name);
                             strcat(monadLog , "].");
                         }
-                        else if ( selectedLink && (selectedLink->startDot->depth == mainResult.resultDot->depth) )
+                        else if ( selectedLink && (selectedLink->startMonad->depth == mainResult.resultMonad->depth) )
                         {
                             strcpy(monadLog , "Changed link end object to [");
-                            strcat(monadLog , (selectedLink->endDot = mainResult.resultDot)->name);
+                            strcat(monadLog , (selectedLink->endMonad = mainResult.resultMonad)->name);
                             strcat(monadLog , "].");
                         }
                    }
@@ -626,7 +625,7 @@ int main(void)
     // De-Initialization
     //--------------------------------------------------------------------------------------
 
-    RemoveSubDotsRecursive(&GodDot); //Free every object and link from memory.
+    RemoveSubMonadsRecursive(&GodMonad); //Free every object and link from memory.
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
