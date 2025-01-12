@@ -498,13 +498,20 @@ int main(void)
                 else
                     strcat(monadLog , "] failed to delete.");
             }
-            else if ( (selectedDot != &GodDot) && IsKeyPressed(KEY_DELETE) )
+            else if (IsKeyPressed(KEY_DELETE))
             {
-                strcpy(monadLog , "Deleted object [");
-                strcat(monadLog , selectedDot->name);
-                strcat(monadLog , "].");
-                selectedDot->deleteFrame = DELETE_PRELINK;
-                selectedDot = NULL;
+                if (selectedDot == &GodDot)
+                {
+                    strcpy(monadLog , "Cannot delete Monad 0.");
+                }
+                else
+                {
+                    strcpy(monadLog , "Deleted object [");
+                    strcat(monadLog , selectedDot->name);
+                    strcat(monadLog , "].");
+                    selectedDot->deleteFrame = DELETE_PRELINK;
+                    selectedDot = NULL;
+                }
             }
            else if (IsKeyPressed(KEY_B))
             {
