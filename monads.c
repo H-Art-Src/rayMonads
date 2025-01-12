@@ -55,10 +55,10 @@ typedef struct structDot
 {
     char name[MONAD_NAME_SIZE];
     Vector2 avgCenter , defaultCenter;
-    struct structDot* rootSubDots;
-    struct structDot* prev;
-    struct structDot* next;
-    struct structLink* rootSubLinks;
+    struct structDot *rootSubDots;
+    struct structDot *prev;
+    struct structDot *next;
+    struct structLink *rootSubLinks;
     float radius;
     int depth;
     int deleteFrame;
@@ -66,10 +66,10 @@ typedef struct structDot
 
 typedef struct structLink
 {
-    struct structDot* startDot;
-    struct structDot* endDot;
-    struct structLink* prev;
-    struct structLink* next;
+    struct structDot *startDot;
+    struct structDot *endDot;
+    struct structLink *prev;
+    struct structLink *next;
 } structLink;
 
 enum Response
@@ -81,20 +81,20 @@ enum Response
 
 typedef struct structActiveResult
 {
-   struct structDot* resultDot;
-   struct structDot* resultContainerDot;
-   struct structLink* resultLink;
+   struct structDot *resultDot;
+   struct structDot *resultContainerDot;
+   struct structLink *resultLink;
    int resultKey , resultDepth;
-}structActiveResult;
+} structActiveResult;
 
 // Adds an object (subdot) to ContainingDotPtr. ContainingDotPtr must not be null.
-struct structDot* AddDot( Vector2 canvasPosition , structDot* containingDotPtr )
+struct structDot *AddDot(Vector2 canvasPosition , structDot *containingDotPtr)
 {
-    if(Vector2Distance(canvasPosition , containingDotPtr->avgCenter) <= 30.0f) //deny if too close to container.
+    if (Vector2Distance(canvasPosition , containingDotPtr->avgCenter) <= 30.0f) //deny if too close to container.
         return NULL;
      
     //malloc and initialize new dot. Always initialize variables that are not being overwritten.
-    structDot* newDotPtr = (structDot*) malloc(sizeof(structDot));
+    structDot *newDotPtr = (structDot*) malloc(sizeof(structDot));
     newDotPtr->defaultCenter = canvasPosition;
     newDotPtr->avgCenter = canvasPosition;
     newDotPtr->rootSubDots = NULL;
@@ -103,16 +103,16 @@ struct structDot* AddDot( Vector2 canvasPosition , structDot* containingDotPtr )
     newDotPtr->depth = containingDotPtr->depth + 1;
     newDotPtr->deleteFrame = DELETE_OFF;
     
-    newDotPtr->name[0] = containingDotPtr->rootSubDots ? containingDotPtr->rootSubDots->prev->name[0] + 1 : 'A';
+    newDotPtr->name[0] = (containingDotPtr->rootSubDots)? containingDotPtr->rootSubDots->prev->name[0] + 1 : 'A';
     newDotPtr->name[1] = 0;
     
     //insert new dot in list entry.
-    structDot* rootPtr = containingDotPtr->rootSubDots;
-    if(rootPtr) //has entries.
+    structDot *rootPtr = containingDotPtr->rootSubDots;
+    if (rootPtr) //has entries.
     {
-        structDot* rootNextPtrUnchanged = rootPtr->next;
-        structDot* rootPrevPtrUnchanged = rootPtr->prev;
-        if(rootPtr == rootNextPtrUnchanged || rootPtr == rootPrevPtrUnchanged) //after one entry
+        structDot *rootNextPtrUnchanged = rootPtr->next;
+        structDot *rootPrevPtrUnchanged = rootPtr->prev;
+        if (rootPtr == rootNextPtrUnchanged || rootPtr == rootPrevPtrUnchanged) //after one entry
         {
             newDotPtr->next = rootPtr;
             newDotPtr->prev = rootPtr;
@@ -135,8 +135,8 @@ struct structDot* AddDot( Vector2 canvasPosition , structDot* containingDotPtr )
     }
     
     //containing dot data
-    float prospectDistance = Vector2Distance(containingDotPtr->avgCenter , canvasPosition) * 1.5f;
-    if(prospectDistance > containingDotPtr->radius)
+    float prospectDistance = Vector2Distance(containingDotPtr->avgCenter , canvasPosition)*1.5f;
+    if (prospectDistance > containingDotPtr->radius)
     {
         containingDotPtr->radius = prospectDistance;
     }
@@ -149,7 +149,7 @@ struct structDot* AddDot( Vector2 canvasPosition , structDot* containingDotPtr )
 void  RemoveSubDotsRecursive(structDot *dotPtr)
 {
     structDot *rootDot = dotPtr->rootSubDots;
-    if(rootDot)
+    if (rootDot)
     {
         structDot *iterator = rootDot;
         do
@@ -161,7 +161,7 @@ void  RemoveSubDotsRecursive(structDot *dotPtr)
     }
     
     structLink *rootLink = dotPtr->rootSubLinks;
-    if(rootLink)
+    if (rootLink)
     {
         structLink *iterator = rootLink;
         do
@@ -176,12 +176,12 @@ void  RemoveSubDotsRecursive(structDot *dotPtr)
 }
 
 //Remove an object (subdot) from containingDotPtr. containingDotPtr must not be null.
-bool RemoveDot(structDot* dotPtr , structDot* containingDotPtr)
+bool RemoveDot(structDot *dotPtr , structDot *containingDotPtr)
 {
-    structDot* rootDot = containingDotPtr->rootSubDots;
-    if(rootDot)
+    structDot *rootDot = containingDotPtr->rootSubDots;
+    if (rootDot)
     {
-        structDot* iterator = rootDot;
+        structDot *iterator = rootDot;
         do
         {
             if (iterator == dotPtr)
@@ -202,10 +202,10 @@ bool RemoveDot(structDot* dotPtr , structDot* containingDotPtr)
 }
 
 // Checks if two dots are of the same category.
-bool SameCategory(structDot* dotPtr , structDot* dotMatePtr)
+bool SameCategory(structDot *dotPtr , structDot *dotMatePtr)
 {
-    structDot* iterator = dotMatePtr;
-    if(iterator)
+    structDot *iterator = dotMatePtr;
+    if (iterator)
     {
         do
         {
@@ -218,17 +218,17 @@ bool SameCategory(structDot* dotPtr , structDot* dotMatePtr)
 }
 
 //All parameters must not be null.
-struct structLink* AddLink( structDot* start ,  structDot* end , structDot* containingDotPtr )
+struct structLink *AddLink(structDot *start ,  structDot *end , structDot *containingDotPtr)
 {
-    structLink* rootPtr = containingDotPtr->rootSubLinks;
+    structLink *rootPtr = containingDotPtr->rootSubLinks;
 
     //Return nothing if it already exists
-    if(rootPtr) //has entries.
+    if (rootPtr) //has entries.
     {
-        structLink* iterator = rootPtr;
+        structLink *iterator = rootPtr;
         do
         {
-            if (iterator->startDot == start && iterator->endDot == end)
+            if ( (iterator->startDot == start) && (iterator->endDot == end) )
             {
                 printf("Link already exists.\n");
                 return NULL;
@@ -237,16 +237,16 @@ struct structLink* AddLink( structDot* start ,  structDot* end , structDot* cont
         } while (iterator != rootPtr);
     }
     //malloc and initialize new Link. Always initialize variables that are not being overwritten.
-    structLink* newLinkPtr = (structLink*) malloc(sizeof(structLink));
+    structLink *newLinkPtr = (structLink*) malloc(sizeof(structLink));
     newLinkPtr->startDot = start;
     newLinkPtr->endDot = end;
         
     //insert new Link in list entry.
-    if(rootPtr) //has entries.
+    if (rootPtr) //has entries.
     {
-        structLink* rootNextPtrUnchanged = rootPtr->next;
-        structLink* rootPrevPtrUnchanged = rootPtr->prev;
-        if(rootPtr == rootNextPtrUnchanged || rootPtr == rootPrevPtrUnchanged) //after one entry
+        structLink *rootNextPtrUnchanged = rootPtr->next;
+        structLink *rootPrevPtrUnchanged = rootPtr->prev;
+        if ( (rootPtr == rootNextPtrUnchanged) || (rootPtr == rootPrevPtrUnchanged) ) //after one entry
         {
             newLinkPtr->next = rootPtr;
             newLinkPtr->prev = rootPtr;
@@ -270,12 +270,12 @@ struct structLink* AddLink( structDot* start ,  structDot* end , structDot* cont
     return newLinkPtr;
 }
 
-bool RemoveLink(structLink* linkPtr , structDot* containingDotPtr)
+bool RemoveLink(structLink *linkPtr , structDot *containingDotPtr)
 {
-    structLink* rootLink = containingDotPtr->rootSubLinks;
-    if(rootLink)
+    structLink *rootLink = containingDotPtr->rootSubLinks;
+    if (rootLink)
     {
-        structLink* iterator = rootLink;
+        structLink *iterator = rootLink;
         do
         {
             if (iterator == linkPtr)
@@ -302,22 +302,22 @@ bool RemoveLink(structLink* linkPtr , structDot* containingDotPtr)
 #define SUBSCOPE functionDepth == selectedDepth + 1
 #define INSCOPE functionDepth == selectedDepth
 #define PRESCOPE functionDepth < selectedDepth
-struct structActiveResult RecursiveDraw(structDot* dotPtr , int functionDepth , int selectedDepth)
+struct structActiveResult RecursiveDraw(structDot *dotPtr , int functionDepth , int selectedDepth)
 {
     //check collision with mouse, generate first part of activeResult.
     structActiveResult activeResult = (structActiveResult){0};
-    activeResult.resultKey = IsMouseButtonPressed(MOUSE_BUTTON_LEFT) ? RESULT_CLICK : (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) ? RESULT_RCLICK : RESULT_NONE);
+    activeResult.resultKey = (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))? RESULT_CLICK : ((IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))? RESULT_RCLICK : RESULT_NONE);
     activeResult.resultDepth = functionDepth;
-    if (functionDepth >= selectedDepth && CheckCollisionPointCircle( GetMousePosition() , dotPtr->avgCenter , 30.0f))
+    if ( (functionDepth >= selectedDepth) && CheckCollisionPointCircle( GetMousePosition() , dotPtr->avgCenter , 30.0f))
     {
         activeResult.resultDot = dotPtr;
     }
 
      //iterate through the functors in the category.
-    structLink* rootLinkPtr = dotPtr->rootSubLinks;
+    structLink *rootLinkPtr = dotPtr->rootSubLinks;
     if (rootLinkPtr)
     {
-        structLink* iterator = rootLinkPtr;
+        structLink *iterator = rootLinkPtr;
         do
         {
             if (INSCOPE)
@@ -325,15 +325,15 @@ struct structActiveResult RecursiveDraw(structDot* dotPtr , int functionDepth , 
                 bool linkHit = false;
                 if (iterator->startDot == iterator->endDot)
                 {
-                    linkHit = CheckCollisionPointCircle( GetMousePosition() , Vector2Add(iterator->startDot->avgCenter , (Vector2){15.0f,15.0f}) , 30.0f );
-                    DrawRectangleV(iterator->startDot->avgCenter , (Vector2){10.0f,10.0f}, linkHit ? RED : BLACK);
+                    linkHit = CheckCollisionPointCircle( GetMousePosition() , Vector2Add(iterator->startDot->avgCenter , (Vector2){15.0f,15.0f}) , 30.0f);
+                    DrawRectangleV(iterator->startDot->avgCenter , (Vector2){10.0f,10.0f}, (linkHit)? RED : BLACK);
                 }
                 else
                 {
                     Vector2 midPoint = Vector2Lerp(iterator->startDot->avgCenter , iterator->endDot->avgCenter , MONAD_LINK_MIDDLE_LERP);
                     linkHit = CheckCollisionPointCircle( GetMousePosition() , midPoint , 30.0f );
-                    DrawLineBezier(iterator->startDot->avgCenter , midPoint ,  2.0f , linkHit ? PURPLE : BLUE);
-                    DrawLineBezier(midPoint , iterator->endDot->avgCenter ,  1.0f ,  SameCategory( iterator->endDot , iterator->startDot ) ? BLACK : RED);
+                    DrawLineBezier(iterator->startDot->avgCenter , midPoint ,  2.0f , (linkHit)? PURPLE : BLUE);
+                    DrawLineBezier(midPoint , iterator->endDot->avgCenter ,  1.0f ,  (SameCategory( iterator->endDot , iterator->startDot ))? BLACK : RED);
                 }
                 if (linkHit)
                 {
@@ -342,11 +342,11 @@ struct structActiveResult RecursiveDraw(structDot* dotPtr , int functionDepth , 
                 }
             }
             
-            structLink* nextSaved = iterator->next;
+            structLink *nextSaved = iterator->next;
 
-            if (iterator->startDot->deleteFrame >= DELETE_POSTONLYLINK || iterator->endDot->deleteFrame >= DELETE_POSTONLYLINK)
+            if ( (iterator->startDot->deleteFrame >= DELETE_POSTONLYLINK) || (iterator->endDot->deleteFrame >= DELETE_POSTONLYLINK) )
             {
-                if(RemoveLink(iterator , dotPtr) && !(rootLinkPtr = dotPtr->rootSubLinks))
+                if (RemoveLink(iterator , dotPtr) && !(rootLinkPtr = dotPtr->rootSubLinks))
                 {
                     break;
                 }
@@ -357,13 +357,13 @@ struct structActiveResult RecursiveDraw(structDot* dotPtr , int functionDepth , 
     }
  
     //iterate through the objects with this object treated as a category.
-    structDot* rootDotPtr = dotPtr->rootSubDots;
+    structDot *rootDotPtr = dotPtr->rootSubDots;
     if (rootDotPtr)
     {
-        structDot* iterator = rootDotPtr;
+        structDot *iterator = rootDotPtr;
         do
         {
-            structDot* next = iterator->next;
+            structDot *next = iterator->next;
             
             if (iterator->deleteFrame >= DELETE_FINAL)
             {
@@ -378,7 +378,7 @@ struct structActiveResult RecursiveDraw(structDot* dotPtr , int functionDepth , 
             }
             else if (INSCOPE)
             {
-                DrawLineV(dotPtr->avgCenter , iterator->avgCenter , iterator == rootDotPtr ? VIOLET : GREEN);
+                DrawLineV(dotPtr->avgCenter , iterator->avgCenter , (iterator == rootDotPtr)? VIOLET : GREEN);
                 DrawLineV(next->avgCenter , iterator->avgCenter , Fade((iterator == rootDotPtr->prev)? ORANGE : YELLOW , 0.5f));
             }
 
@@ -390,7 +390,7 @@ struct structActiveResult RecursiveDraw(structDot* dotPtr , int functionDepth , 
             {
                 activeResult = activeOveride;
             }
-            else if(activeOveride.resultLink)
+            else if (activeOveride.resultLink)
             {
                 activeResult.resultLink = activeOveride.resultLink;
                 activeResult.resultDot = dotPtr;
@@ -406,7 +406,7 @@ struct structActiveResult RecursiveDraw(structDot* dotPtr , int functionDepth , 
             dotPtr->deleteFrame++;
             return (structActiveResult){0};
     }
-    else if(dotPtr->deleteFrame >= DELETE_POSTONLYLINK)
+    else if (dotPtr->deleteFrame >= DELETE_POSTONLYLINK)
     {
         dotPtr->deleteFrame--;
     }
@@ -419,22 +419,22 @@ struct structActiveResult RecursiveDraw(structDot* dotPtr , int functionDepth , 
     if (!activeResult.resultContainerDot && activeResult.resultDot != dotPtr)
         activeResult.resultContainerDot = dotPtr;
 
-    if(INSCOPE)
+    if (INSCOPE)
     {
         //DrawCircleLinesV(dotPtr->avgCenter , dotPtr->radius , GREEN);
         DrawPoly(dotPtr->avgCenter, 3 ,  5.0f ,   0 , PURPLE);
         DrawText(dotPtr->name , dotPtr->avgCenter.x + 10 , dotPtr->avgCenter.y + 10 , 24 , Fade(PURPLE , 0.5f));
     }
-    else if(PRESCOPE)
+    else if (PRESCOPE)
     {
         DrawCircleLinesV(dotPtr->avgCenter , dotPtr->radius , Fade(GRAY , (float){functionDepth} / (float){selectedDepth}) );
     }
-    else if(SUBSCOPE)
+    else if (SUBSCOPE)
     {     
         DrawCircleV(dotPtr->avgCenter , 5.0f , BLUE);
         DrawText(dotPtr->name , dotPtr->avgCenter.x + 10 , dotPtr->avgCenter.y + 10 , 16 , Fade(SKYBLUE , 0.5f));
     }
-    if(activeResult.resultDot == dotPtr)
+    if (activeResult.resultDot == dotPtr)
         DrawCircleLinesV(dotPtr->avgCenter , 20.0f , ORANGE); 
 
     return activeResult;
@@ -461,8 +461,8 @@ int main(void)
     strcpy(GodDot.name , "Monad 0");
     
     char monadLog[MONAD_NAME_SIZE*3] = "Session started.";
-    structDot* selectedDot = NULL;
-    structLink* selectedLink = NULL;
+    structDot *selectedDot = NULL;
+    structLink *selectedLink = NULL;
     int selectedDepth = 0;
     structActiveResult mainResult =  (structActiveResult){0};
     //--------------------------------------------------------------------------------------
@@ -473,7 +473,7 @@ int main(void)
     AddDot((Vector2){200,400}, &GodDot);
     AddDot((Vector2){100,100} , AddDot((Vector2){350,200}, &GodDot));
 
-    structDot* example =  AddDot((Vector2){400,400}, &GodDot);
+    structDot *example =  AddDot((Vector2){400,400}, &GodDot);
     AddDot((Vector2){440,410}, example);
     AddDot((Vector2){400,450}, example);
     AddDot((Vector2){500,500}, example);
@@ -498,7 +498,7 @@ int main(void)
                 else
                     strcat(monadLog , "] failed to delete.");
             }
-            else if (selectedDot != &GodDot && IsKeyPressed(KEY_DELETE))
+            else if ( (selectedDot != &GodDot) && IsKeyPressed(KEY_DELETE) )
             {
                 strcpy(monadLog , "Deleted object [");
                 strcat(monadLog , selectedDot->name);
@@ -532,10 +532,10 @@ int main(void)
 
             DrawText( monadLog , 48 , 8 , 20 , GRAY);
 
-            if(selectedDot)
+            if (selectedDot)
             {
                 int determineMode = selectedDot->depth - selectedDepth;
-                DrawText( !determineMode ? "Adding" : determineMode == 1 ? "Linking" : "Edit Only" , 32, 32, 20, SKYBLUE);
+                DrawText(( !determineMode)? "Adding" : (determineMode == 1)? "Linking" : "Edit Only" , 32, 32, 20, SKYBLUE);
                 DrawPoly(selectedDot->avgCenter, 3 ,  10.0f ,   0 ,  Fade(RED , 0.5f));
             }
             else
@@ -543,12 +543,12 @@ int main(void)
                 DrawText( "Null Selection" , 32, 32, 20, ORANGE);
             }
 
-            if(selectedLink)
+            if (selectedLink)
             {
                 DrawText("Edit Link" , 32, 64, 20, PURPLE);
                 Vector2 midPoint = Vector2Lerp(selectedLink->startDot->avgCenter , selectedLink->endDot->avgCenter , MONAD_LINK_MIDDLE_LERP);
                 DrawLineBezier(selectedLink->startDot->avgCenter , midPoint ,  4.0f , Fade(RED,0.5f));
-                DrawLineBezier(midPoint , selectedLink->endDot->avgCenter ,  2.0f ,  Fade(SameCategory( selectedLink->endDot , selectedLink->startDot ) ? RED : PURPLE , 0.5f) );
+                DrawLineBezier(midPoint , selectedLink->endDot->avgCenter ,  2.0f ,  Fade((SameCategory( selectedLink->endDot , selectedLink->startDot ))? RED : PURPLE , 0.5f) );
                 DrawRectangleV(midPoint , (Vector2){25.0f,25.0f}, Fade(RED , 0.5f));
             }
 
@@ -569,15 +569,15 @@ int main(void)
                 printf("Object %p, Link %p\n" , selectedDot , selectedLink);
             break;
             case RESULT_RCLICK:
-                if(selectedDot)
+                if (selectedDot)
                 {
-                   if (mainResult.resultDot && mainResult.resultContainerDot && mainResult.resultDepth == selectedDot->depth)
+                   if ( mainResult.resultDot && mainResult.resultContainerDot && (mainResult.resultDepth == selectedDot->depth) )
                    {
                        if (SameCategory(selectedDot , mainResult.resultDot))
                             selectedLink = AddLink(selectedDot , mainResult.resultDot , mainResult.resultContainerDot);
                         else
                             selectedLink = AddLink(mainResult.resultDot , selectedDot , mainResult.resultContainerDot);
-                        if(selectedLink)
+                        if (selectedLink)
                         {
                             strcpy(monadLog , "Added link [");
                             strcat(monadLog , selectedLink->startDot->name);
@@ -596,7 +596,7 @@ int main(void)
                             strcat(monadLog , AddDot(GetMousePosition() ,  selectedDot)->name);
                             strcat(monadLog , "].");
                         }
-                        else if (selectedLink && selectedLink->startDot->depth == mainResult.resultDot->depth)
+                        else if ( selectedLink && (selectedLink->startDot->depth == mainResult.resultDot->depth) )
                         {
                             strcpy(monadLog , "Changed link end object to [");
                             strcat(monadLog , (selectedLink->endDot = mainResult.resultDot)->name);
@@ -608,9 +608,9 @@ int main(void)
         }
         
         float mouseMove = GetMouseWheelMove();
-        if(mouseMove != 0)
+        if (mouseMove != 0)
         {
-            selectedDepth += mouseMove > 0 ? 1 : -1;
+            selectedDepth += (mouseMove > 0)? 1 : -1;
             if (selectedDepth < 0)
                 selectedDepth = 0;
         }
