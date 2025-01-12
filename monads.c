@@ -36,6 +36,7 @@ If you are selecting a link it will delete that instead of an object.
 #include <stdio.h>
 #include <stdlib.h>
 
+// This enum acts as a countdown to make sure links of an object are deleted in exactly two frames for object deletion and link breaking.
 enum
 {
     DELETE_OFF,
@@ -49,11 +50,11 @@ enum
 // 2. rootSubLink can only have starting Monads that exist within rootSubMonads.
 // 3. Link cannot comprise of Monads of different depths.
 // 4. Only one combination of a link can exist in totality.
-#define MONAD_NAME_SIZE 32
+#define MAX_MONAD_NAME_SIZE 32
 #define MONAD_LINK_MIDDLE_LERP 0.35f
 typedef struct Monad
 {
-    char name[MONAD_NAME_SIZE];
+    char name[MAX_MONAD_NAME_SIZE];
     Vector2 avgCenter , defaultCenter;
     struct Monad *rootSubMonads;
     struct Monad *prev;
@@ -79,6 +80,7 @@ enum Response
     RESULT_RCLICK
 };
 
+// After returning recursively up the chain, certain results can overide other results depending on the situation.
 typedef struct ActiveResult
 {
    struct Monad *resultMonad;
@@ -145,7 +147,7 @@ struct Monad *AddMonad(Vector2 canvasPosition , Monad *containingMonadPtr)
     return newMonadPtr;
 }
 
-//Recursively frees the object and its Link after calling the function for its sub-objects.
+// Recursively frees the object and its links after calling the function for its sub-objects.
 void  RemoveSubMonadsRecursive(Monad *MonadPtr)
 {
     Monad *rootMonad = MonadPtr->rootSubMonads;
@@ -175,7 +177,7 @@ void  RemoveSubMonadsRecursive(Monad *MonadPtr)
     free(MonadPtr);
 }
 
-//Remove an object (subMonad) from containingMonadPtr. containingMonadPtr must not be null.
+// Remove an object (subMonad) from containingMonadPtr. containingMonadPtr must not be null.
 bool RemoveMonad(Monad *MonadPtr , Monad *containingMonadPtr)
 {
     Monad *rootMonad = containingMonadPtr->rootSubMonads;
@@ -217,7 +219,7 @@ bool SameCategory(Monad *MonadPtr , Monad *MonadMatePtr)
     return false;
 }
 
-//All parameters must not be null.
+// Add a link to containingMonadPtr. start must be an object contained in the containingMonadPtr. All parameters must not be null.
 struct Link *AddLink(Monad *start ,  Monad *end , Monad *containingMonadPtr)
 {
     Link *rootPtr = containingMonadPtr->rootSubLink;
@@ -270,6 +272,7 @@ struct Link *AddLink(Monad *start ,  Monad *end , Monad *containingMonadPtr)
     return newLinkPtr;
 }
 
+// Remove a link from containingMonadPtr. containingMonadPtr must not be null.
 bool RemoveLink(Link *linkPtr , Monad *containingMonadPtr)
 {
     Link *rootLink = containingMonadPtr->rootSubLink;
@@ -295,13 +298,13 @@ bool RemoveLink(Link *linkPtr , Monad *containingMonadPtr)
     return false;
 }
 
-//Renders all Monads and Link. Returns activated Monad, it's container, if any and the depth. MonadPtr must not be null.
-//TODO: Every recursive call adds all of the instructions of the function to RAM again. Which parts of this function can be separated into its own function so they don't get loaded in every time?
-//Or maybe... the compiler catches it already.
 #define OUTSCOPED functionDepth > selectedDepth + 1
 #define SUBSCOPE functionDepth == selectedDepth + 1
 #define INSCOPE functionDepth == selectedDepth
 #define PRESCOPE functionDepth < selectedDepth
+// Renders all Monads and Link. Returns activated Monad, it's container, if any and the depth. MonadPtr must not be null.
+//TODO: Every recursive call adds all of the instructions of the function to RAM again. Which parts of this function can be separated into its own function so they don't get loaded in every time?
+//Or maybe... the compiler catches it already.
 struct ActiveResult RecursiveDraw(Monad *MonadPtr , int functionDepth , int selectedDepth)
 {
     //check collision with mouse, generate first part of activeResult.
@@ -421,7 +424,7 @@ struct ActiveResult RecursiveDraw(Monad *MonadPtr , int functionDepth , int sele
     if (INSCOPE)
     {
         //DrawCircleLinesV(MonadPtr->avgCenter , MonadPtr->radius , GREEN);
-        DrawPoly(MonadPtr->avgCenter, 3 ,  5.0f ,   0 , PURPLE);
+        DrawPoly(MonadPtr->avgCenter, 3 ,  5.0f ,  0 , PURPLE);
         DrawText(MonadPtr->name , MonadPtr->avgCenter.x + 10 , MonadPtr->avgCenter.y + 10 , 24 , Fade(PURPLE , 0.5f));
     }
     else if (PRESCOPE)
@@ -452,14 +455,14 @@ int main(void)
     // Variables
     //--------------------------------------------------------------------------------------
     Monad GodMonad = (Monad){0};
-    GodMonad.avgCenter.x = (float){screenWidth}/2.0;
-    GodMonad.avgCenter.y = (float){screenHeight}/2.0;
+    GodMonad.avgCenter.x = (float){screenWidth}/2.0f;
+    GodMonad.avgCenter.y = (float){screenHeight}/2.0f;
     GodMonad.defaultCenter = GodMonad.avgCenter;
     GodMonad.prev = &GodMonad;
     GodMonad.next = &GodMonad;
     strcpy(GodMonad.name , "Monad 0");
     
-    char monadLog[MONAD_NAME_SIZE*3] = "Session started.";
+    char monadLog[MAX_MONAD_NAME_SIZE*3] = "Session started.";
     Monad *selectedMonad = NULL;
     Link *selectedLink = NULL;
     int selectedDepth = 0;
@@ -524,8 +527,8 @@ int main(void)
                 strcpy(monadLog , "Renamed [");
                 strcat(monadLog , selectedMonad->name);
                 strcat(monadLog , "] to [");
-                strncpy(selectedMonad->name , GetClipboardText() , MONAD_NAME_SIZE);
-                selectedMonad->name[MONAD_NAME_SIZE - 1] = '\0'; //ensures NULL termination.
+                strncpy(selectedMonad->name , GetClipboardText() , MAX_MONAD_NAME_SIZE);
+                selectedMonad->name[MAX_MONAD_NAME_SIZE - 1] = '\0'; //ensures NULL termination.
                 strcat(monadLog , selectedMonad->name);
                 strcat(monadLog , "].");
             }
@@ -625,7 +628,7 @@ int main(void)
     // De-Initialization
     //--------------------------------------------------------------------------------------
 
-    RemoveSubMonadsRecursive(&GodMonad); //Free every object and link from memory.
+    RemoveSubMonadsRecursive(&GodMonad); // Free every object and link from memory.
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
