@@ -296,7 +296,7 @@ bool RemoveLink(structLink *linkPtr , structDot *containingDotPtr)
 }
 
 //Renders all dots and links. Returns activated dot, it's container, if any and the depth. dotPtr must not be null.
-//TODO: Every recursive call adds all of the instructions of the function to RAM again. Which lines of code can be serperated into it's own function so they don't get loaded in every time?
+//TODO: Every recursive call adds all of the instructions of the function to RAM again. Which parts of this function can be separated into its own function so they don't get loaded in every time?
 //Or maybe... the compiler catches it already.
 #define OUTSCOPED functionDepth > selectedDepth + 1
 #define SUBSCOPE functionDepth == selectedDepth + 1
