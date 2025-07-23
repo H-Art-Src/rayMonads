@@ -447,7 +447,7 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, int functionDepth, int select
     return activeResult;
 }
 
-void LogMonadsRecursive(Monad* MonadPtr, int functionDepth, char* out)
+void LogMonadsRecursive(Monad* MonadPtr, int functionDepth, char** out)
 {
     //iterate through the functors in the category.
     Link* rootLinkPtr = MonadPtr->rootSubLink;
@@ -468,7 +468,7 @@ void LogMonadsRecursive(Monad* MonadPtr, int functionDepth, char* out)
         Monad* iterator = rootMonadPtr;
         do
         {
-            
+            LogMonadsRecursive(iterator, functionDepth+1, out);
             iterator = iterator->next;
         } while (iterator != rootMonadPtr);
     }
