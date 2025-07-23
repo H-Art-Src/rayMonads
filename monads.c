@@ -447,6 +447,34 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, int functionDepth, int select
     return activeResult;
 }
 
+void LogMonadsRecursive(Monad* MonadPtr, int functionDepth, char* out)
+{
+    //iterate through the functors in the category.
+    Link* rootLinkPtr = MonadPtr->rootSubLink;
+    if (rootLinkPtr)
+    {
+        Link* iterator = rootLinkPtr;
+        do
+        {
+
+            iterator = iterator->next;
+        } while (iterator != rootLinkPtr);
+    }
+
+    //iterate through the objects with this object treated as a category.
+    Monad* rootMonadPtr = MonadPtr->rootSubMonads;
+    if (rootMonadPtr)
+    {
+        Monad* iterator = rootMonadPtr;
+        do
+        {
+            
+            iterator = iterator->next;
+        } while (iterator != rootMonadPtr);
+    }
+}
+
+
 int main(void)
 {
     // Initialization
