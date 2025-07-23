@@ -80,7 +80,7 @@ enum Response
     RESULT_RCLICK
 };
 
-// After returning recursively up the chain, certain results can overide other results depending on the situation.
+// After returning recursively up the chain, certain results can override other results depending on the situation.
 typedef struct ActiveResult
 {
     struct Monad* resultMonad;
@@ -389,16 +389,16 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, int functionDepth, int select
             }
 
             //--------------------------------
-            ActiveResult activeOveride = RecursiveDraw(iterator, functionDepth + 1, selectedDepth);
+            ActiveResult activeOverride = RecursiveDraw(iterator, functionDepth + 1, selectedDepth);
             //--------------------------------
 
-            if (activeOveride.resultMonad && !activeResult.resultLink)
+            if (activeOverride.resultMonad && !activeResult.resultLink)
             {
-                activeResult = activeOveride;
+                activeResult = activeOverride;
             }
-            else if (activeOveride.resultLink)
+            else if (activeOverride.resultLink)
             {
-                activeResult.resultLink = activeOveride.resultLink;
+                activeResult.resultLink = activeOverride.resultLink;
                 activeResult.resultMonad = MonadPtr;
             }
 
