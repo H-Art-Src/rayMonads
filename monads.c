@@ -456,7 +456,7 @@ enum discardAppend
 
 char* AppendMallocDiscard(char* str1, char* str2, int discardLevel)
 {
-    char* new_str;
+    char* new_str = NULL;
     if ((new_str = malloc(strlen(str1)+strlen(str2)+1)))
     {
         new_str[0] = '\0';
