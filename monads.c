@@ -447,20 +447,43 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, int functionDepth, int select
     return activeResult;
 }
 
-char* AppendMalloc(char* str1, char* str2)
+enum discardAppend
+{
+    DISCARD_NONE,
+    DISCARD_FIRST,// use when str2 is not a malloc'd char array.
+    DISCARD_BOTH
+};
+
+char* AppendMallocDiscard(char* str1, char* str2, int discardLevel)
 {
     char* new_str;
-    if (new_str = malloc(strlen(str1)+strlen(str2)+1))
+    if ((new_str = malloc(strlen(str1)+strlen(str2)+1)))
     {
         new_str[0] = '\0';
         strcat(new_str,str1);
         strcat(new_str,str2);
     }
+
+    if (discardLevel >= DISCARD_FIRST)
+    {
+        if(str1)
+        {
+            free(str1);
+        }
+        if(discardLevel >= DISCARD_BOTH && str2)
+        {
+            free(str2);
+        }
+    }
+
     return new_str;
 }
 
-void PrintMonadsRecursive(Monad* MonadPtr, int functionDepth, char** out)
+void PrintMonadsRecursive(Monad* MonadPtr, int functionDepth, char** outRef) //outref remains the same value through the entire recursion, is that okay?
 {
+    char* out = *outRef;
+    out = AppendMallocDiscard(out , "[" , DISCARD_FIRST);
+
     //iterate through the functors in the category.
     Link* rootLinkPtr = MonadPtr->rootSubLink;
     if (rootLinkPtr)
@@ -481,10 +504,13 @@ void PrintMonadsRecursive(Monad* MonadPtr, int functionDepth, char** out)
         do
         {
 
-            PrintMonadsRecursive(iterator, functionDepth+1, out);
+            PrintMonadsRecursive(iterator, functionDepth+1, outRef);
             iterator = iterator->next;
         } while (iterator != rootMonadPtr);
     }
+
+    out = AppendMallocDiscard(out , "]" , DISCARD_FIRST);
+    outRef = &out;
 }
 
 
@@ -582,7 +608,8 @@ int main(void)
             }
             else if (IsKeyPressed(KEY_F))
             {
-                char* out;
+                char* out = malloc(1);
+                out[0] = '\0';
                 PrintMonadsRecursive(selectedMonad , 0 , &out);
                 printf(out);
             }
