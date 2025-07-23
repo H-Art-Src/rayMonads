@@ -491,6 +491,7 @@ void PruneBannedCharacters(char* name)
             {
                 name[0] = '_';
                 iteratorBanned = &iteratorBanned[1];
+                break;
             }
         }
         name = &name[1];
