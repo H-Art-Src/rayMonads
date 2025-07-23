@@ -479,6 +479,25 @@ char* AppendMallocDiscard(char* str1, char* str2, int discardLevel)
     return new_str;
 }
 
+void PruneBannedCharacters(char* name)
+{
+    char* bannedChars = "[]:,";
+    while (name[0] != '\0')
+    {
+        char* iteratorBanned = bannedChars;
+        while (iteratorBanned[0] != '\0')
+        {
+            if (name[0] == iteratorBanned[0])
+            {
+                name[0] = '_';
+                iteratorBanned = &iteratorBanned[1];
+            }
+        }
+        name = &name[1];
+    }
+}
+
+
 void PrintMonadsRecursive(Monad* MonadPtr, int functionDepth, char** outRef) //outref remains the same value through the entire recursion, is that okay?
 {
     char* out = *outRef;
