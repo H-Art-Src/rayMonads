@@ -447,7 +447,19 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, int functionDepth, int select
     return activeResult;
 }
 
-void LogMonadsRecursive(Monad* MonadPtr, int functionDepth, char** out)
+char* AppendMalloc(char* str1, char* str2)
+{
+    char* new_str;
+    if (new_str = malloc(strlen(str1)+strlen(str2)+1))
+    {
+        new_str[0] = '\0';
+        strcat(new_str,str1);
+        strcat(new_str,str2);
+    }
+    return new_str;
+}
+
+void PrintMonadsRecursive(Monad* MonadPtr, int functionDepth, char** out)
 {
     //iterate through the functors in the category.
     Link* rootLinkPtr = MonadPtr->rootSubLink;
@@ -468,7 +480,8 @@ void LogMonadsRecursive(Monad* MonadPtr, int functionDepth, char** out)
         Monad* iterator = rootMonadPtr;
         do
         {
-            LogMonadsRecursive(iterator, functionDepth+1, out);
+
+            PrintMonadsRecursive(iterator, functionDepth+1, out);
             iterator = iterator->next;
         } while (iterator != rootMonadPtr);
     }
@@ -516,7 +529,7 @@ int main(void)
     AddMonad((Vector2) { 500, 500 }, example);
     //--------------------------------------------------------------------------------------
 
-    // Main game loop
+    // Main loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
         if (selectedMonad)
@@ -566,6 +579,12 @@ int main(void)
                 selectedMonad->name[MAX_MONAD_NAME_SIZE - 1] = '\0'; //ensures NULL termination.
                 strcat(monadLog, selectedMonad->name);
                 strcat(monadLog, "].");
+            }
+            else if (IsKeyPressed(KEY_F))
+            {
+                char* out;
+                PrintMonadsRecursive(selectedMonad , 0 , &out);
+                printf(out);
             }
         }
 
