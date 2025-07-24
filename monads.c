@@ -92,9 +92,6 @@ typedef struct ActiveResult
 // Adds an object (subMonad) to ContainingMonadPtr. ContainingMonadPtr must not be null.
 struct Monad* AddMonad(Vector2 canvasPosition, Monad* containingMonadPtr)
 {
-    if (Vector2Distance(canvasPosition, containingMonadPtr->avgCenter) <= 30.0f) //deny if too close to container.
-        return NULL;
-
     //malloc and initialize new Monad. Always initialize variables that are not being overwritten.
     Monad* newMonadPtr = (Monad*)malloc(sizeof(Monad));
     memset(newMonadPtr, 0, sizeof(Monad));
@@ -618,18 +615,18 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
     payload[0] = '\0';
     payload2[0] = '\0';
     int step = ID;
-
     while (*progress != '\0')
     {
         switch(*progress)
         {
             case '[':
-                progress = InterpretAddMonadsAndLinksRecursive(AddMonad((Vector2){strlen(progress)*1.1f , strlen(progress)*1.1f} , selectedMonad) , progress);
+                Vector2 oriV2 = selectedMonad->avgCenter;
+                int len = strlen(progress);
+                progress = InterpretAddMonadsAndLinksRecursive(AddMonad((Vector2){oriV2.x + len*1.1f + 60.0f , oriV2.y - len*1.1f} , selectedMonad) , progress);
             break;
             case ']':
                 free(payload);
                 free(payload2);
-                printf("Monad: %s\n" , selectedMonad->name);        
                 return progress;
             case ':':
                 switch(step)
@@ -651,7 +648,6 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 payload2[0] = '\0';
                 linkSide = payload;
                 step++;
-                progress++;
             break;
             case ',':
                 //TODO finally add the link here.
@@ -662,11 +658,9 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 payload[0] = '\0';
                 payload2[0] = '\0';
                 linkSide = payload;
-                progress++;
             break;
             case '>':
                 linkSide = payload2;
-                progress++;
             break;
             default:
                 char addChar[2] = {*progress , '\0'};
@@ -780,10 +774,14 @@ int main(void)
                 printf("%s\n" , out);
                 SetClipboardText(out);
                 free(out);
+                strcpy(monadLog, "Copied text data from ");
+                strcat(monadLog, selectedMonad->name);
+                strcat(monadLog, "to clipboard.");   
             }
             else if (IsKeyPressed(KEY_V))
             {
                 InterpretAddMonadsAndLinksRecursive(selectedMonad , GetClipboardText());
+                strcpy(monadLog, "Pasted text data from clipboard.");
             }
         }
 
@@ -852,7 +850,7 @@ int main(void)
                 }
                 else if (selectedDepth == selectedMonad->depth)
                 {
-                    if (!mainResult.resultMonad)
+                    if (!mainResult.resultMonad && Vector2Distance(selectedMonad->avgCenter, GetMousePosition()) <= 30.0f /*deny if too close to container.*/)
                     {
                         strcpy(monadLog, "Added object [");
                         strcat(monadLog, AddMonad(GetMousePosition(), selectedMonad)->name);
