@@ -512,12 +512,11 @@ char* PruneForbiddenCharactersMalloc(char* name)
     char* newName = malloc(strlen(name) + 1);
     char* forbiddenChars = _FORBIDDEN;
     int index = 0;
-    printf("%s \n____\n" , name);
     while (name[index] != '\0')
     {
         char* editedCharacter = &newName[index];
         char* iteratorForbidden = forbiddenChars;
-        editedCharacter = &name[index];
+        *editedCharacter = name[index];
         while (iteratorForbidden[0] != '\0')
         {
             if (*editedCharacter == iteratorForbidden[0])
@@ -527,11 +526,9 @@ char* PruneForbiddenCharactersMalloc(char* name)
             }
             iteratorForbidden = &iteratorForbidden[1];
         }
-        printf("%c>%c " , name[index] , *editedCharacter);
         index++;
     }
     newName[index] = '\0';
-    printf("\n|||\n");
     return newName;
 }
 
@@ -540,7 +537,6 @@ void PrintMonadsRecursive(Monad* MonadPtr, int functionDepth, char** outRef) //o
     char* out = *outRef;
     out = AppendMallocDiscard(out , "[" , DISCARD_FIRST);
     out = AppendMallocDiscard(out , PruneForbiddenCharactersMalloc(MonadPtr->name) , DISCARD_BOTH);
-    //out = AppendMallocDiscard(out , MonadPtr->name, DISCARD_FIRST);
     out = AppendMallocDiscard(out , ":" , DISCARD_FIRST);
 
     //iterate through the functors in the category.
@@ -556,6 +552,7 @@ void PrintMonadsRecursive(Monad* MonadPtr, int functionDepth, char** outRef) //o
     }
 
     out = AppendMallocDiscard(out , ":" , DISCARD_FIRST);
+    *outRef = out; //reset this before the iteration.
 
     //iterate through the objects with this object treated as a category.
     Monad* rootMonadPtr = MonadPtr->rootSubMonads;
