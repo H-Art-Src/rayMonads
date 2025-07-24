@@ -542,7 +542,23 @@ void PrintMonadsRecursive(Monad* MonadPtr, int index, char** outRef) //outref re
     out = AppendMallocDiscard(out , PruneForbiddenCharactersMalloc(MonadPtr->name) , DISCARD_BOTH);
     out = AppendMallocDiscard(out , ":" , DISCARD_FIRST);
 
+    *outRef = out; //reset this before the iteration.
+    //iterate through the objects with this object treated as a category.
     Monad* rootMonadPtr = MonadPtr->rootSubMonads;
+    if (rootMonadPtr)
+    {
+        int subIndex = 0;
+        Monad* iterator = rootMonadPtr;
+        do
+        {
+            PrintMonadsRecursive(iterator, subIndex, outRef);
+            iterator = iterator->next;
+            subIndex++;
+        } while (iterator != rootMonadPtr);
+        out = *outRef; // Old reference is most certainly freed in recursive calls. Update.
+    }
+
+    out = AppendMallocDiscard(out , ":" , DISCARD_FIRST);
 
     //iterate through the functors in the category.
     Link* rootLinkPtr = MonadPtr->rootSubLink;
@@ -579,23 +595,6 @@ void PrintMonadsRecursive(Monad* MonadPtr, int index, char** outRef) //outref re
             } while (matchingIterator != rootMonadPtr);
             iterator = iterator->next;
         } while (iterator != rootLinkPtr);
-    }
-
-    out = AppendMallocDiscard(out , ":" , DISCARD_FIRST);
-    *outRef = out; //reset this before the iteration.
-
-    //iterate through the objects with this object treated as a category.
-    if (rootMonadPtr)
-    {
-        int subIndex = 0;
-        Monad* iterator = rootMonadPtr;
-        do
-        {
-            PrintMonadsRecursive(iterator, subIndex, outRef);
-            iterator = iterator->next;
-            subIndex++;
-        } while (iterator != rootMonadPtr);
-        out = *outRef; // Old reference is most certainly freed in recursive calls. Update.
     }
 
     out = AppendMallocDiscard(out , "]" , DISCARD_FIRST);
