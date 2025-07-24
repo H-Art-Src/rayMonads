@@ -12,4 +12,6 @@ Click any object/connection to select it.
 -Key 'B' to delete all connections from and to a selected object.\
 -Key 'Delete' to delete a selected object and recursively delete all objects contained within that object (and so on) and their connections from and to.\
 If you are selecting a link it will delete that instead of an object.\
--Key 'V' will rename the selected object to your clipboard contents.
+-Key 'T' will rename the selected object to your clipboard contents.
+-Key 'C' will copy the selected monad's text data recursively to your clipboard.
+-Key 'V' will paste the text data recursively to the selected monad, renaming it in the process.
