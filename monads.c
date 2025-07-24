@@ -867,6 +867,11 @@ int main(void)
             break;
         }
 
+        if (selectedMonad && IsMouseButtonDown(MOUSE_BUTTON_LEFT) && Vector2Distance(selectedMonad->avgCenter, GetMousePosition()) <= 30.0f)
+        {
+            selectedMonad->avgCenter = GetMousePosition();
+        }
+
         float mouseMove = GetMouseWheelMove();
         if (mouseMove != 0)
         {
