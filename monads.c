@@ -601,6 +601,11 @@ void PrintMonadsRecursive(Monad* MonadPtr, int index, char** outRef) //outref re
     *outRef = out;
 }
 
+char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , char* in)
+{
+    char* progress = in;
+
+}
 
 int main(void)
 {
@@ -684,7 +689,7 @@ int main(void)
                 strcat(monadLog, "].");
                 selectedMonad->deleteFrame = DELETE_ONLYLINK;
             }
-            else if (IsKeyPressed(KEY_V))
+            else if (IsKeyPressed(KEY_T))
             {
                 strcpy(monadLog, "Renamed [");
                 strcat(monadLog, selectedMonad->name);
@@ -694,13 +699,18 @@ int main(void)
                 strcat(monadLog, selectedMonad->name);
                 strcat(monadLog, "].");
             }
-            else if (IsKeyPressed(KEY_F))
+            else if (IsKeyPressed(KEY_C))
             {
                 char* out = malloc(1);
                 out[0] = '\0';
                 PrintMonadsRecursive(selectedMonad , 0 , &out);
                 printf("%s\n" , out);
+                SetClipboardText(out);
                 free(out);
+            }
+            else if (IsKeyPressed(KEY_V))
+            {
+                InterpretAddMonadsAndLinksRecursive(selectedMonad , GetClipboardText());
             }
         }
 
