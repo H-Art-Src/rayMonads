@@ -479,30 +479,69 @@ char* AppendMallocDiscard(char* str1, char* str2, int discardLevel)
     return new_str;
 }
 
-void PruneBannedCharacters(char* name)
+#define _FORBIDDEN "[]:,>"
+
+char* GenerateIDMalloc(int index) //sub monads limited by the highest int, really high.
 {
-    char* bannedChars = "[]:,";
-    while (name[0] != '\0')
+    char* forbiddenChars = _FORBIDDEN;
+    char* ret = malloc(1);
+    ret[0] = '\0';
+    #define _HIGHESTCHAR 255
+    for (; index; index /= _HIGHESTCHAR)
     {
-        char* iteratorBanned = bannedChars;
-        while (iteratorBanned[0] != '\0')
+        char character[2] = {(char)(index % _HIGHESTCHAR) , '\0'};
+        char* iteratorForbidden = forbiddenChars;
+        while (iteratorForbidden[0] != '\0')
         {
-            if (name[0] == iteratorBanned[0])
+            if (character[0] == iteratorForbidden[0])
             {
-                name[0] = '_';
-                iteratorBanned = &iteratorBanned[1];
-                break;
+                character[0]++;
+            }
+            else
+            {
+                iteratorForbidden = &iteratorForbidden[1];
             }
         }
-        name = &name[1];
+        ret = AppendMallocDiscard(ret , character , DISCARD_FIRST);
     }
+    return ret;
 }
 
+char* PruneForbiddenCharactersMalloc(char* name)
+{
+    char* newName = malloc(strlen(name) + 1);
+    char* forbiddenChars = _FORBIDDEN;
+    int index = 0;
+    printf("%s \n____\n" , name);
+    while (name[index] != '\0')
+    {
+        char* editedCharacter = &newName[index];
+        char* iteratorForbidden = forbiddenChars;
+        editedCharacter = &name[index];
+        while (iteratorForbidden[0] != '\0')
+        {
+            if (*editedCharacter == iteratorForbidden[0])
+            {
+                *editedCharacter = '_';
+                break;
+            }
+            iteratorForbidden = &iteratorForbidden[1];
+        }
+        printf("%c>%c " , name[index] , *editedCharacter);
+        index++;
+    }
+    newName[index] = '\0';
+    printf("\n|||\n");
+    return newName;
+}
 
 void PrintMonadsRecursive(Monad* MonadPtr, int functionDepth, char** outRef) //outref remains the same value through the entire recursion, is that okay?
 {
     char* out = *outRef;
     out = AppendMallocDiscard(out , "[" , DISCARD_FIRST);
+    out = AppendMallocDiscard(out , PruneForbiddenCharactersMalloc(MonadPtr->name) , DISCARD_BOTH);
+    //out = AppendMallocDiscard(out , MonadPtr->name, DISCARD_FIRST);
+    out = AppendMallocDiscard(out , ":" , DISCARD_FIRST);
 
     //iterate through the functors in the category.
     Link* rootLinkPtr = MonadPtr->rootSubLink;
@@ -516,6 +555,8 @@ void PrintMonadsRecursive(Monad* MonadPtr, int functionDepth, char** outRef) //o
         } while (iterator != rootLinkPtr);
     }
 
+    out = AppendMallocDiscard(out , ":" , DISCARD_FIRST);
+
     //iterate through the objects with this object treated as a category.
     Monad* rootMonadPtr = MonadPtr->rootSubMonads;
     if (rootMonadPtr)
@@ -527,10 +568,11 @@ void PrintMonadsRecursive(Monad* MonadPtr, int functionDepth, char** outRef) //o
             PrintMonadsRecursive(iterator, functionDepth+1, outRef);
             iterator = iterator->next;
         } while (iterator != rootMonadPtr);
+        out = *outRef; // Old reference is most certainly freed in recursive calls. Update.
     }
 
     out = AppendMallocDiscard(out , "]" , DISCARD_FIRST);
-    outRef = &out;
+    *outRef = out;
 }
 
 
@@ -631,7 +673,8 @@ int main(void)
                 char* out = malloc(1);
                 out[0] = '\0';
                 PrintMonadsRecursive(selectedMonad , 0 , &out);
-                printf(out);
+                printf("%s\n" , out);
+                free(out);
             }
         }
 
