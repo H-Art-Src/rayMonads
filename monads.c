@@ -479,7 +479,7 @@ char* AppendMallocDiscard(char* str1, char* str2, int discardLevel)
     return new_str;
 }
 
-#define _FORBIDDEN "[]:,>"
+#define _FORBIDDEN "[]:,>\0\r\n"
 
 char* GenerateIDMalloc(int index) //sub monads limited by the highest int, really high.
 {
@@ -500,7 +500,7 @@ char* GenerateIDMalloc(int index) //sub monads limited by the highest int, reall
             }
             else
             {
-                iteratorForbidden = &iteratorForbidden[1];
+                iteratorForbidden++;
             }
         }
         ret = AppendMallocDiscard(ret , character , DISCARD_FIRST);
@@ -525,7 +525,7 @@ char* PruneForbiddenCharactersMalloc(char* name)
                 *editedCharacter = '_';
                 break;
             }
-            iteratorForbidden = &iteratorForbidden[1];
+            iteratorForbidden++;
         }
         index++;
     }
@@ -601,10 +601,83 @@ void PrintMonadsRecursive(Monad* MonadPtr, int index, char** outRef) //outref re
     *outRef = out;
 }
 
-char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , char* in)
+enum interpretStep
 {
-    char* progress = in;
+    ID,
+    NAME,
+    SUB,
+    LINK
+};
 
+char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
+{
+    char* progress = in + 1; //adding 1 assuming it's coming right after a '['.
+    char* payload = malloc(1);
+    char* payload2 = malloc(1);
+    char* linkSide = payload;
+    payload[0] = '\0';
+    payload2[0] = '\0';
+    int step = ID;
+
+    while (*progress != '\0')
+    {
+        switch(*progress)
+        {
+            case '[':
+                progress = InterpretAddMonadsAndLinksRecursive(AddMonad((Vector2){strlen(progress)*1.1f , strlen(progress)*1.1f} , selectedMonad) , progress);
+            break;
+            case ']':
+                free(payload);
+                free(payload2);
+                printf("Monad: %s\n" , selectedMonad->name);        
+                return progress;
+            case ':':
+                switch(step)
+                {
+                    case ID:
+                    break;
+                    case NAME:
+                        strcpy(selectedMonad->name, payload);
+                    break;
+                    case SUB:
+                    break;
+                    case LINK:
+                }
+                free(payload);
+                free(payload2);
+                payload = malloc(1);
+                payload2 = malloc(1);
+                payload[0] = '\0';
+                payload2[0] = '\0';
+                linkSide = payload;
+                step++;
+                progress++;
+            break;
+            case ',':
+                //TODO finally add the link here.
+                free(payload);
+                free(payload2);
+                payload = malloc(1);
+                payload2 = malloc(1);
+                payload[0] = '\0';
+                payload2[0] = '\0';
+                linkSide = payload;
+                progress++;
+            break;
+            case '>':
+                linkSide = payload2;
+                progress++;
+            break;
+            default:
+                char addChar[2] = {*progress , '\0'};
+                linkSide = AppendMallocDiscard(linkSide , addChar , DISCARD_FIRST);
+        }
+        progress++;
+    }
+    free(payload);
+    free(payload2);
+    printf("Monad - no end bracket: %s\n" , selectedMonad->name);
+    return progress;
 }
 
 int main(void)
