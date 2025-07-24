@@ -650,7 +650,38 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 step++;
             break;
             case ',':
-                //TODO finally add the link here.
+                Monad* rootMonadPtr = selectedMonad->rootSubMonads;
+                if (rootMonadPtr)
+                {
+                    Monad* iterator = rootMonadPtr;
+                    int index = 0;
+                    do
+                    {
+                        char* left = GenerateIDMalloc(index);
+                        if (!strcmp(left , payload))
+                        {
+                            Monad* iterator2 = rootMonadPtr;
+                            int index2 = 0;
+                            do
+                            {
+                                char* right = GenerateIDMalloc(index2);
+                                if (!strcmp(right , payload2) && AddLink(iterator2 , iterator , selectedMonad))
+                                {
+                                    free(right);
+                                    break;
+                                }
+                                free(right);
+                                index2++;
+                                iterator2 = iterator2->next;
+                            } while (iterator != rootMonadPtr);
+                            free(left);
+                            break;
+                        }
+                        free(left);
+                        index++;
+                        iterator = iterator->next;
+                    } while (iterator != rootMonadPtr);
+                }
                 free(payload);
                 free(payload2);
                 payload = malloc(1);
@@ -711,8 +742,7 @@ int main(void)
 
     Monad* example = AddMonad((Vector2) { 400, 400 }, GodMonad);
     AddMonad((Vector2) { 440, 410 }, example);
-    AddMonad((Vector2) { 400, 450 }, example);
-    AddMonad((Vector2) { 500, 500 }, example);
+    AddLink(AddMonad((Vector2) { 400, 450 }, example) , AddMonad((Vector2) { 500, 500 }, example) , example);
     //--------------------------------------------------------------------------------------
 
     // Main loop
