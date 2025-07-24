@@ -732,6 +732,7 @@ int main(void)
     Link* selectedLink = NULL;
     int selectedDepth = 0;
     ActiveResult mainResult = (ActiveResult){ 0 };
+    bool selectDrag = false;
     //--------------------------------------------------------------------------------------
 
     // Testing
@@ -897,9 +898,14 @@ int main(void)
             break;
         }
 
-        if (selectedMonad && IsMouseButtonDown(MOUSE_BUTTON_LEFT) && Vector2Distance(selectedMonad->avgCenter, GetMousePosition()) <= 30.0f)
+        if (selectedMonad && IsMouseButtonDown(MOUSE_BUTTON_LEFT) && (selectDrag || Vector2Distance(selectedMonad->avgCenter, GetMousePosition()) <= 30.0f))
         {
             selectedMonad->avgCenter = GetMousePosition();
+            selectDrag = true;
+        }
+        else
+        {
+            selectDrag = false;
         }
 
         float mouseMove = GetMouseWheelMove();
