@@ -483,6 +483,7 @@ char* AppendMallocDiscard(char* str1, char* str2, int discardLevel)
 
 char* GenerateIDMalloc(int index) //sub monads limited by the highest int, really high.
 {
+    index++;//so it isn't 0
     char* forbiddenChars = _FORBIDDEN;
     char* ret = malloc(1);
     ret[0] = '\0';
@@ -532,21 +533,50 @@ char* PruneForbiddenCharactersMalloc(char* name)
     return newName;
 }
 
-void PrintMonadsRecursive(Monad* MonadPtr, int functionDepth, char** outRef) //outref remains the same value through the entire recursion, is that okay?
+void PrintMonadsRecursive(Monad* MonadPtr, int index, char** outRef) //outref remains the same value through the entire recursion, is that okay?
 {
     char* out = *outRef;
     out = AppendMallocDiscard(out , "[" , DISCARD_FIRST);
+    out = AppendMallocDiscard(out , GenerateIDMalloc(index) , DISCARD_BOTH);
+    out = AppendMallocDiscard(out , ":" , DISCARD_FIRST);
     out = AppendMallocDiscard(out , PruneForbiddenCharactersMalloc(MonadPtr->name) , DISCARD_BOTH);
     out = AppendMallocDiscard(out , ":" , DISCARD_FIRST);
 
+    Monad* rootMonadPtr = MonadPtr->rootSubMonads;
+
     //iterate through the functors in the category.
     Link* rootLinkPtr = MonadPtr->rootSubLink;
-    if (rootLinkPtr)
+    if (rootLinkPtr && rootMonadPtr)
     {
         Link* iterator = rootLinkPtr;
         do
         {
-
+            int subIndex = 0;
+            Monad* matchingIterator = rootMonadPtr;
+            do
+            {
+                if (matchingIterator == iterator->startMonad)
+                {
+                    int subIndex2 = 0;
+                    Monad* matchingIterator2 = rootMonadPtr;
+                    do
+                    {
+                        if (matchingIterator2 == iterator->endMonad)
+                        {
+                            out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex) , DISCARD_BOTH);
+                            out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
+                            out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex2) , DISCARD_BOTH);
+                            out = AppendMallocDiscard(out , "," , DISCARD_FIRST);
+                            break;
+                        }
+                        matchingIterator2 = matchingIterator2->next;
+                        subIndex2++;
+                    } while (matchingIterator2 != rootMonadPtr);
+                    break;
+                }
+                matchingIterator = matchingIterator->next;
+                subIndex++;
+            } while (matchingIterator != rootMonadPtr);
             iterator = iterator->next;
         } while (iterator != rootLinkPtr);
     }
@@ -555,15 +585,15 @@ void PrintMonadsRecursive(Monad* MonadPtr, int functionDepth, char** outRef) //o
     *outRef = out; //reset this before the iteration.
 
     //iterate through the objects with this object treated as a category.
-    Monad* rootMonadPtr = MonadPtr->rootSubMonads;
     if (rootMonadPtr)
     {
+        int subIndex = 0;
         Monad* iterator = rootMonadPtr;
         do
         {
-
-            PrintMonadsRecursive(iterator, functionDepth+1, outRef);
+            PrintMonadsRecursive(iterator, subIndex, outRef);
             iterator = iterator->next;
+            subIndex++;
         } while (iterator != rootMonadPtr);
         out = *outRef; // Old reference is most certainly freed in recursive calls. Update.
     }
