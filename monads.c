@@ -634,7 +634,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                     case ID:
                     break;
                     case NAME:
-                        strcpy(selectedMonad->name, payload);
+                        strcpy(selectedMonad->name, linkSide);
                     break;
                     case SUB:
                     break;
