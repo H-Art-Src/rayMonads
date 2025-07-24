@@ -622,23 +622,16 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
             case '[':
                 Vector2 oriV2 = selectedMonad->avgCenter;
                 int len = strlen(progress);
-                progress = InterpretAddMonadsAndLinksRecursive(AddMonad((Vector2){oriV2.x + len*1.1f + 60.0f , oriV2.y - len*1.1f} , selectedMonad) , progress);
+                progress = InterpretAddMonadsAndLinksRecursive(AddMonad((Vector2){oriV2.x + len*(oriV2.x < GetScreenWidth()/2 ? 6.1f : -6.1f) + 60.0f , oriV2.y + len*(oriV2.y < GetScreenHeight()/2 ? 6.1f : -6.1f)} , selectedMonad) , progress);
             break;
             case ']':
                 free(payload);
                 free(payload2);
                 return progress;
             case ':':
-                switch(step)
+                if (NAME == step)
                 {
-                    case ID:
-                    break;
-                    case NAME:
-                        strcpy(selectedMonad->name, linkSide);
-                    break;
-                    case SUB:
-                    break;
-                    case LINK:
+                    strcpy(selectedMonad->name, linkSide);
                 }
                 free(payload);
                 free(payload2);
