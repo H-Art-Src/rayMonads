@@ -92,6 +92,14 @@ typedef struct ActiveResult
     int resultKey, resultDepth;
 } ActiveResult;
 
+#define SCREENMARGIN 50
+
+bool IsVector2OnScreen(Vector2 pos)
+{
+    return pos.x >= SCREENMARGIN && pos.x <= GetScreenWidth() - SCREENMARGIN &&
+           pos.y >= SCREENMARGIN && pos.y <= GetScreenHeight() - SCREENMARGIN;
+}
+
 // Adds an object (subMonad) to ContainingMonadPtr. ContainingMonadPtr must not be null.
 struct Monad* AddMonad(Vector2 canvasPosition, Monad* containingMonadPtr)
 {
@@ -714,6 +722,7 @@ int main(void)
     //--------------------------------------------------------------------------------------
     const int screenWidth = 800;
     const int screenHeight = 800;
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(screenWidth, screenHeight, "Monad");
     SetTargetFPS(60);
     //--------------------------------------------------------------------------------------
@@ -730,6 +739,7 @@ int main(void)
     GodMonad->next = GodMonad;
     strcpy(GodMonad->name, "Monad 0");
 
+    Vector2 mouseV2;
     char monadLog[MAX_MONAD_NAME_SIZE * 3] = "Session started.";
     Monad* selectedMonad = NULL;
     Link* selectedLink = NULL;
@@ -752,6 +762,7 @@ int main(void)
     // Main loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
+        mouseV2 = GetMousePosition();
         if (selectedMonad)
         {
             if (selectedLink && IsKeyPressed(KEY_DELETE))
@@ -886,10 +897,10 @@ int main(void)
                 }
                 else if (selectedDepth == selectedMonad->depth)
                 {
-                    if (!mainResult.resultMonad && Vector2Distance(selectedMonad->avgCenter, GetMousePosition()) >= 30.0f /*deny if too close to container.*/)
+                    if (!mainResult.resultMonad && Vector2Distance(selectedMonad->avgCenter, mouseV2) >= 30.0f /*deny if too close to container.*/)
                     {
                         strcpy(monadLog, "Added object [");
-                        strcat(monadLog, AddMonad(GetMousePosition(), selectedMonad)->name);
+                        strcat(monadLog, AddMonad(mouseV2, selectedMonad)->name);
                         strcat(monadLog, "].");
                     }
                     else if (selectedLink && (selectedLink->startMonad->depth == mainResult.resultMonad->depth))
@@ -903,9 +914,12 @@ int main(void)
             break;
         }
 
-        if (selectedMonad && IsMouseButtonDown(MOUSE_BUTTON_LEFT) && (selectDrag || Vector2Distance(selectedMonad->avgCenter, GetMousePosition()) <= 30.0f))
+        if (selectedMonad && IsMouseButtonDown(MOUSE_BUTTON_LEFT) && (selectDrag || Vector2Distance(selectedMonad->avgCenter, mouseV2) <= 30.0f))
         {
-            selectedMonad->avgCenter = GetMousePosition();
+            if (IsVector2OnScreen(mouseV2))
+            {
+                selectedMonad->avgCenter = mouseV2;
+            }
             selectDrag = true;
         }
         else
