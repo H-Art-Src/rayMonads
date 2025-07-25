@@ -614,7 +614,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
     char* progress = in + 1; //adding 1 assuming it's coming right after a '['.
     char* payload = malloc(1);
     char* payload2 = malloc(1);
-    char* linkSide = payload;
+    int payloadIndex = 0;
     payload[0] = '\0';
     payload2[0] = '\0';
     int step = ID;
@@ -634,7 +634,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
             case ':':
                 if (NAME == step)
                 {
-                    strcpy(selectedMonad->name, linkSide);
+                    strcpy(selectedMonad->name, payload);
                 }
                 free(payload);
                 free(payload2);
@@ -642,7 +642,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 payload2 = malloc(1);
                 payload[0] = '\0';
                 payload2[0] = '\0';
-                linkSide = payload;
+                payloadIndex = 0;
                 step++;
             break;
             case ',':
@@ -684,14 +684,21 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 payload2 = malloc(1);
                 payload[0] = '\0';
                 payload2[0] = '\0';
-                linkSide = payload;
+                payloadIndex = 0;
             break;
             case '>':
-                linkSide = payload2;
+                payloadIndex = 1;
             break;
             default:
                 char addChar[2] = {*progress , '\0'};
-                linkSide = AppendMallocDiscard(linkSide , addChar , DISCARD_FIRST);
+                if(payloadIndex == 1)
+                {
+                    payload2 = AppendMallocDiscard(payload2 , addChar , DISCARD_FIRST);
+                }
+                else
+                {
+                    payload = AppendMallocDiscard(payload , addChar , DISCARD_FIRST);
+                }
         }
         progress++;
     }
