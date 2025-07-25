@@ -669,7 +669,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                                 free(right);
                                 index2++;
                                 iterator2 = iterator2->next;
-                            } while (iterator != rootMonadPtr);
+                            } while (iterator2 != rootMonadPtr);
                             free(left);
                             break;
                         }
