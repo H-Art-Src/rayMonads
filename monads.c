@@ -680,7 +680,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 step++;
             break;
             case ';':
-                if (firstNewMonad)
+                if (firstNewMonad && lastNewMonad)
                 {
                     Monad* iterator = firstNewMonad;
                     int index = 0;
