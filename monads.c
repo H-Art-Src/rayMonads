@@ -818,7 +818,9 @@ int main(void)
             {
                 if (selectedMonad == GodMonad)
                 {
-                    strcpy(monadLog, "Cannot delete Monad 0.");
+                    strcpy(monadLog, "Cannot delete [");
+                    strcat(monadLog, selectedMonad->name);
+                    strcat(monadLog, "]: Is root.");
                 }
                 else
                 {
@@ -856,16 +858,16 @@ int main(void)
                     printf("%s\n" , out);
                     SetClipboardText(out);
                     free(out);
-                    strcpy(monadLog, "Copied text data from ");
+                    strcpy(monadLog, "Copied text data from [");
                     strcat(monadLog, selectedMonad->name);
-                    strcat(monadLog, "to clipboard.");   
+                    strcat(monadLog, "] to clipboard.");   
                 }
                 else if (IsKeyPressed(KEY_V))
                 {
                     InterpretAddMonadsAndLinksRecursive(selectedMonad , GetClipboardText());
-                    strcpy(monadLog, "Pasted text data in ");
+                    strcpy(monadLog, "Pasted text data in [");
                     strcat(monadLog, selectedMonad->name);
-                    strcat(monadLog, " from clipboard.");   
+                    strcat(monadLog, "] from clipboard.");   
                 }
             }
             else if(IsKeyDown(KEY_BACKSPACE))
