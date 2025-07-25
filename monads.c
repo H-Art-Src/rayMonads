@@ -824,10 +824,13 @@ int main(void)
                 }
                 else
                 {
-                    strcpy(monadLog, "Deleted object [");
-                    strcat(monadLog, selectedMonad->name);
-                    strcat(monadLog, "].");
-                    selectedMonad->deleteFrame = DELETE_PRELINK;
+                    if (!selectedMonad->deleteFrame)
+                    {
+                        strcpy(monadLog, "Deleted object [");
+                        strcat(monadLog, selectedMonad->name);
+                        strcat(monadLog, "].");
+                        selectedMonad->deleteFrame = DELETE_PRELINK;
+                    }
                     selectedMonad = NULL;
                 }
             }
@@ -843,7 +846,7 @@ int main(void)
                     strcat(monadLog, selectedMonad->name);
                     strcat(monadLog, "].");
                 }
-                else if (IsKeyPressed(KEY_B))
+                else if (!selectedMonad->deleteFrame && IsKeyPressed(KEY_B))
                 {
                     strcpy(monadLog, "Broke all links from and to [");
                     strcat(monadLog, selectedMonad->name);
