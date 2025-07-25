@@ -24,10 +24,13 @@ Click any object/connection to select it.
 -It will instead create a one way connection from the right-clicked object if it is in a different category (container object).
 -You can change a link's travelling to object if you are selecting it and its containing object (usually will also be selected by clicking the link) by right clicking an object at the same depth.
 -If you hold the left mouse button down, you can drag the currently selected object around.
+-When selecting an object, you can rename it by simply typing and using backspace.
 
--Key 'B' to delete all connections from and to a selected object.
 -Key 'Delete' to delete a selected object and recursively delete all objects contained within that object (and so on) and their connections from and to.
 If you are selecting a link it will delete that instead of an object.
+-The Alt keys will clear the last action message.
+The following commands need a control key held down to function:
+-Key 'B' to delete all connections from and to a selected object.
 -Key 'T' will rename the selected object to your clipboard contents.
 -Key 'C' will copy the selected object and recursively for its sub-objects as text data into your clipboard.
 -Key 'V' will paste the clipboard contents, assuming it's good text data, recursively into named sub-objects of the selected object. This renames the selected object as well.
@@ -771,6 +774,8 @@ int main(void)
     int selectedDepth = 0;
     ActiveResult mainResult = (ActiveResult){ 0 };
     bool selectDrag = false;
+
+    int backspaceDelay = 0;
     //--------------------------------------------------------------------------------------
 
     // Testing
@@ -788,7 +793,12 @@ int main(void)
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
         mouseV2 = GetMousePosition();
-        if (selectedMonad)
+
+        if(IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT))
+        {
+            strcpy(monadLog , "");
+        }
+        else if (selectedMonad)
         {
             if (selectedLink && IsKeyPressed(KEY_DELETE))
             {
@@ -819,41 +829,93 @@ int main(void)
                     selectedMonad = NULL;
                 }
             }
-            else if (IsKeyPressed(KEY_B))
+            else if(IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL))
             {
-                strcpy(monadLog, "Broke all links from and to [");
-                strcat(monadLog, selectedMonad->name);
-                strcat(monadLog, "].");
-                selectedMonad->deleteFrame = DELETE_ONLYLINK;
+                if (IsKeyPressed(KEY_T))
+                {
+                    strcpy(monadLog, "Renamed [");
+                    strcat(monadLog, selectedMonad->name);
+                    strcat(monadLog, "] to [");
+                    strncpy(selectedMonad->name, GetClipboardText(), MAX_MONAD_NAME_SIZE);
+                    selectedMonad->name[MAX_MONAD_NAME_SIZE - 1] = '\0'; //ensures NULL termination.
+                    strcat(monadLog, selectedMonad->name);
+                    strcat(monadLog, "].");
+                }
+                else if (IsKeyPressed(KEY_B))
+                {
+                    strcpy(monadLog, "Broke all links from and to [");
+                    strcat(monadLog, selectedMonad->name);
+                    strcat(monadLog, "].");
+                    selectedMonad->deleteFrame = DELETE_ONLYLINK;
+                }
+                else if (IsKeyPressed(KEY_C))
+                {
+                    char* out = malloc(1);
+                    out[0] = '\0';
+                    PrintMonadsRecursive(selectedMonad , 0 , &out);
+                    printf("%s\n" , out);
+                    SetClipboardText(out);
+                    free(out);
+                    strcpy(monadLog, "Copied text data from ");
+                    strcat(monadLog, selectedMonad->name);
+                    strcat(monadLog, "to clipboard.");   
+                }
+                else if (IsKeyPressed(KEY_V))
+                {
+                    InterpretAddMonadsAndLinksRecursive(selectedMonad , GetClipboardText());
+                    strcpy(monadLog, "Pasted text data in ");
+                    strcat(monadLog, selectedMonad->name);
+                    strcat(monadLog, " from clipboard.");   
+                }
             }
-            else if (IsKeyPressed(KEY_T))
+            else if(IsKeyDown(KEY_BACKSPACE))
             {
-                strcpy(monadLog, "Renamed [");
-                strcat(monadLog, selectedMonad->name);
-                strcat(monadLog, "] to [");
-                strncpy(selectedMonad->name, GetClipboardText(), MAX_MONAD_NAME_SIZE);
-                selectedMonad->name[MAX_MONAD_NAME_SIZE - 1] = '\0'; //ensures NULL termination.
-                strcat(monadLog, selectedMonad->name);
-                strcat(monadLog, "].");
+                if (backspaceDelay)
+                {
+                    backspaceDelay--;
+                }
+                else
+                {
+                    selectedMonad->name[strlen(selectedMonad->name) - 1] = '\0';
+                    backspaceDelay = 5;
+                }
             }
-            else if (IsKeyPressed(KEY_C))
+            else
             {
-                char* out = malloc(1);
-                out[0] = '\0';
-                PrintMonadsRecursive(selectedMonad , 0 , &out);
-                printf("%s\n" , out);
-                SetClipboardText(out);
-                free(out);
-                strcpy(monadLog, "Copied text data from ");
-                strcat(monadLog, selectedMonad->name);
-                strcat(monadLog, "to clipboard.");   
-            }
-            else if (IsKeyPressed(KEY_V))
-            {
-                InterpretAddMonadsAndLinksRecursive(selectedMonad , GetClipboardText());
-                strcpy(monadLog, "Pasted text data in ");
-                strcat(monadLog, selectedMonad->name);
-                strcat(monadLog, " from clipboard.");   
+                backspaceDelay = 0;
+                int key = GetKeyPressed();
+                if (key && key != KEY_LEFT_SHIFT && key != KEY_RIGHT_SHIFT && key != KEY_LEFT_SUPER && key != KEY_RIGHT_SUPER)
+                {
+                    int nameLength = strlen(selectedMonad->name);
+                    if (nameLength < MAX_MONAD_NAME_SIZE - 1)
+                    {
+                        bool shift = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
+                        if (key >= KEY_A && key <= KEY_Z) 
+                        {
+                            char c = 'a' + (key - KEY_A);
+                            if (shift) 
+                            {
+                                c -= 32;
+                            }
+                            key = c;
+                        }
+                        if (key >= KEY_ZERO && key <= KEY_NINE) 
+                        {
+                            if (shift) {
+                                const char shifted[] = {')', '!', '@', '#', '$', '%', '^', '&', '*', '('};
+                                key = shifted[key - KEY_ZERO];
+                            } else {
+                                key = '0' + (key - KEY_ZERO);
+                            }
+                        }
+                        if (key == KEY_SPACE) 
+                        {
+                            key = ' ';
+                        }
+                        selectedMonad->name[nameLength] = (char)key;
+                        selectedMonad->name[nameLength + 1] = '\0';
+                    }
+                }
             }
         }
 
