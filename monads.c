@@ -634,7 +634,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
             case ':':
                 if (NAME == step)
                 {
-                    strcpy(selectedMonad->name, payload);
+                    strncpy(selectedMonad->name, payload, MAX_MONAD_NAME_SIZE);
                 }
                 free(payload);
                 free(payload2);
