@@ -611,7 +611,7 @@ enum interpretStep
 
 char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
 {
-    char* progress = in + 1; //adding 1 assuming it's coming right after a '['.
+    char* progress = (char*)in + 1; //adding 1 assuming it's coming right after a '['.
     char* payload = malloc(1);
     char* payload2 = malloc(1);
     int payloadIndex = 0;
@@ -661,7 +661,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                             do
                             {
                                 char* right = GenerateIDMalloc(index2);
-                                if (!strcmp(right , payload2) && AddLink(iterator2 , iterator , selectedMonad))
+                                if (!strcmp(right , payload2) && AddLink(iterator , iterator2 , selectedMonad))
                                 {
                                     free(right);
                                     break;
