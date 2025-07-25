@@ -808,7 +808,9 @@ int main(void)
             else if (IsKeyPressed(KEY_V))
             {
                 InterpretAddMonadsAndLinksRecursive(selectedMonad , GetClipboardText());
-                strcpy(monadLog, "Pasted text data from clipboard.");
+                strcpy(monadLog, "Pasted text data in ");
+                strcat(monadLog, selectedMonad->name);
+                strcat(monadLog, " from clipboard.");   
             }
         }
 
