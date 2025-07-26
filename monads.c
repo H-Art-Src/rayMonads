@@ -628,7 +628,7 @@ void PrintMonadsRecursive(Monad* MonadPtr, int index, char** outRef) //outref re
                                 matchingIterator2 = matchingIterator2->prev;
                             }
                         }
-                    } while (matchingIterator2 != provenParentRoot);
+                    } while (matchingIterator2 != provenParentRoot && subIndex2 > 0);
                     break;
                 }
                 matchingIterator = matchingIterator->next;
