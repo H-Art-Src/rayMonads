@@ -653,7 +653,6 @@ enum interpretStep
 char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
 {
     char* progress = (char*)in + 1; //adding 1 assuming it's coming right after a '['.
-    char* linkCheckPoint = NULL;
     char* selfID = malloc(1);
     char* payload = malloc(1);
     char* payload2 = malloc(1);
@@ -709,7 +708,6 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 break;
                 case NAME:
                     strncpy(selectedMonad->name, payload, MAX_MONAD_NAME_SIZE);
-                    linkCheckPoint = progress;
                 break;
                 case SUB:
                     lastNewMonad = selectedMonad->prev;
