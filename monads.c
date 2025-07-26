@@ -584,21 +584,51 @@ void PrintMonadsRecursive(Monad* MonadPtr, int index, char** outRef) //outref re
             {
                 if (matchingIterator == iterator->startMonad)
                 {
-                    int subIndex2 = 0;
-                    Monad* matchingIterator2 = rootMonadPtr;
+                    int subIndex2 = index;
+                    Monad* provenParentRoot = NULL;//only match with it2.
+                    Monad* matchingIterator2 = MonadPtr;//Now we're matching the function call's monad itself.
                     do
                     {
-                        if (matchingIterator2 == iterator->endMonad)
+                        int subIndex3 = 0;
+                        Monad* matchingIterator3 = matchingIterator2->rootSubMonads;
+                        if (matchingIterator3)
                         {
-                            out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex) , DISCARD_BOTH);
-                            out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
-                            out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex2) , DISCARD_BOTH);
-                            out = AppendMallocDiscard(out , ";" , DISCARD_FIRST);
-                            break;
+                            do
+                            {
+                                if (matchingIterator3 == iterator->endMonad)
+                                {
+                                    out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex) , DISCARD_BOTH);
+                                    out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
+                                    out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex2) , DISCARD_BOTH);
+                                    out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
+                                    out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex3) , DISCARD_BOTH);
+                                    out = AppendMallocDiscard(out , ";" , DISCARD_FIRST);
+                                    break;
+                                }
+                                matchingIterator3 = matchingIterator3->next;
+                                subIndex3++;
+                            } while (matchingIterator3 != matchingIterator2->rootSubMonads);
                         }
-                        matchingIterator2 = matchingIterator2->next;
-                        subIndex2++;
-                    } while (matchingIterator2 != rootMonadPtr);
+                        if(provenParentRoot)
+                        {
+                            matchingIterator2 = MonadPtr->next;
+                            subIndex2++;
+                        }
+                        else
+                        {
+                            subIndex2--;
+                            if (!subIndex2)
+                            {
+                                provenParentRoot = matchingIterator2->prev;
+                                matchingIterator2 = MonadPtr->next;
+                                subIndex2 = index + 1;
+                            }
+                            else
+                            {
+                                matchingIterator2 = matchingIterator2->prev;
+                            }
+                        }
+                    } while (matchingIterator2 != provenParentRoot);
                     break;
                 }
                 matchingIterator = matchingIterator->next;
