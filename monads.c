@@ -34,6 +34,7 @@ The following commands need a control key held down to function:
 -Key 'T' will rename the selected object to your clipboard contents.
 -Key 'C' will copy the selected object and recursively for its sub-objects as text data into your clipboard.
 -Key 'V' will paste the clipboard contents, assuming it's good text data, recursively into named sub-objects of the selected object. This renames the selected object as well.
+Links are copied and pasted as well, with the stipulation that the connected objects have the same grandparent.
 */
 
 #include "raylib.h"
@@ -657,6 +658,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
     char* payload = malloc(1);
     char* payload2 = malloc(1);
     char* payload3 = malloc(1);
+    char* linkCheckPointProgress = NULL;
     selfID[0] = '\0';
     payload[0] = '\0';
     payload2[0] = '\0';
@@ -695,6 +697,64 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 subCount++;
             break;
             case ']':
+                // try to paste links with categories.
+                int balance = -1;
+                char* subId = ;//I stopped here.
+                int substep = ID;
+                while(*linkCheckPointProgress != '\0')
+                {
+                    if (!balance)
+                    {
+                        switch (linkCheckPointProgress)
+                        {
+                            case ':':
+                                substep++;
+                                free(payload);
+                                free(payload2);
+                                free(payload3);
+                                payload = malloc(1);
+                                payload2 = malloc(1);
+                                payload3 = malloc(1);
+                                payload[0] = '\0';
+                                payload2[0] = '\0';
+                                payload3[0] = '\0';
+                                payloadIndex = 0;
+                            break;
+                            case '>':
+                                payloadIndex++;
+                            break;
+                            case ';':
+                            break;
+                            default:
+                                char addChar[2] = {*progress , '\0'};
+                                switch (payloadIndex)
+                                {
+                                    case 0:
+                                        payload = AppendMallocDiscard(payload , addChar , DISCARD_FIRST);
+                                    break;
+                                    case 1:
+                                        payload2 = AppendMallocDiscard(payload2 , addChar , DISCARD_FIRST);
+                                    break;
+                                    case 2:
+                                        payload3 = AppendMallocDiscard(payload3 , addChar , DISCARD_FIRST);
+                                }
+                        }
+                    }
+                    switch(linkCheckPointProgress)
+                    {
+                        case '[':
+                            balance++;
+                            if(!balance)
+                            {
+
+                            }
+                        break;
+                        case ']':
+                            balance--;
+                        break;
+                    }
+                    linkCheckPointProgress++;
+                }
                 free(selfID);
                 free(payload);
                 free(payload2);
@@ -708,6 +768,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 break;
                 case NAME:
                     strncpy(selectedMonad->name, payload, MAX_MONAD_NAME_SIZE);
+                    linkCheckPointProgress = progress;
                 break;
                 case SUB:
                     lastNewMonad = selectedMonad->prev;
