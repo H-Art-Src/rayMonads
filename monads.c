@@ -647,8 +647,7 @@ enum interpretStep
     ID,
     NAME,
     SUB,
-    LINK,
-    INTERLINK
+    LINK
 };
 
 char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
@@ -710,13 +709,10 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 break;
                 case NAME:
                     strncpy(selectedMonad->name, payload, MAX_MONAD_NAME_SIZE);
+                    linkCheckPoint = progress;
                 break;
                 case SUB:
                     lastNewMonad = selectedMonad->prev;
-                    linkCheckPoint = progress;
-                break;
-                case LINK:
-                    progress = linkCheckPoint;
                 }
                 free(payload);
                 free(payload2);
@@ -733,41 +729,34 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
             case ';':
                 if (firstNewMonad && lastNewMonad)
                 {
-                    if (step == LINK)
+                    Monad* iterator = firstNewMonad;
+                    int index = 0;
+                    do
                     {
-                        Monad* iterator = firstNewMonad;
-                        int index = 0;
-                        do
+                        char* left = GenerateIDMalloc(index);
+                        if (!strcmp(left , payload))
                         {
-                            char* left = GenerateIDMalloc(index);
-                            if (!strcmp(left , payload))
+                            Monad* iterator2 = firstNewMonad;
+                            int index2 = 0;
+                            do
                             {
-                                Monad* iterator2 = firstNewMonad;
-                                int index2 = 0;
-                                do
+                                char* right = GenerateIDMalloc(index2);
+                                if (!strcmp(selfID , payload2) && !strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))
                                 {
-                                    char* right = GenerateIDMalloc(index2);
-                                    if (!strcmp(selfID , payload2) && !strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))
-                                    {
-                                        free(right);
-                                        break;
-                                    }
                                     free(right);
-                                    index2++;
-                                    iterator2 = iterator2->next;
-                                } while (iterator2 != lastNewMonad);
-                                free(left);
-                                break;
-                            }
+                                    break;
+                                }
+                                free(right);
+                                index2++;
+                                iterator2 = iterator2->next;
+                            } while (iterator2 != lastNewMonad);
                             free(left);
-                            index++;
-                            iterator = iterator->next;
-                        } while (iterator != lastNewMonad);
-                    }
-                    else if (step == INTERLINK)
-                    {
-
-                    }
+                            break;
+                        }
+                        free(left);
+                        index++;
+                        iterator = iterator->next;
+                    } while (iterator != lastNewMonad);
                 }
                 free(payload);
                 free(payload2);
