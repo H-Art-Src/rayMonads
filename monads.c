@@ -647,18 +647,24 @@ enum interpretStep
     ID,
     NAME,
     SUB,
-    LINK
+    LINK,
+    INTERLINK
 };
 
 char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
 {
     char* progress = (char*)in + 1; //adding 1 assuming it's coming right after a '['.
+    char* linkCheckPoint = NULL;
+    char* selfID = malloc(1);
     char* payload = malloc(1);
     char* payload2 = malloc(1);
-    int payloadIndex = 0;
+    char* payload3 = malloc(1);
+    selfID[0] = '\0';
     payload[0] = '\0';
     payload2[0] = '\0';
-    int step = ID;
+    payload3[0] = '\0';
+    char payloadIndex = 0;
+    char step = ID;
     int subCount = 0;
     Monad* rootMonadPtr = selectedMonad->rootSubMonads;
     Monad* firstNewMonad = NULL;
@@ -691,85 +697,112 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 subCount++;
             break;
             case ']':
+                free(selfID);
                 free(payload);
                 free(payload2);
+                free(payload3);
                 return progress;
             case ':':
                 switch (step)
                 {
+                case ID:
+                    selfID = AppendMallocDiscard(selfID , payload , DISCARD_BOTH);
+                break;
                 case NAME:
                     strncpy(selectedMonad->name, payload, MAX_MONAD_NAME_SIZE);
                 break;
                 case SUB:
                     lastNewMonad = selectedMonad->prev;
+                    linkCheckPoint = progress;
+                break;
+                case LINK:
+                    progress = linkCheckPoint;
                 }
                 free(payload);
                 free(payload2);
+                free(payload3);
                 payload = malloc(1);
                 payload2 = malloc(1);
+                payload3 = malloc(1);
                 payload[0] = '\0';
                 payload2[0] = '\0';
+                payload3[0] = '\0';
                 payloadIndex = 0;
                 step++;
             break;
             case ';':
                 if (firstNewMonad && lastNewMonad)
                 {
-                    Monad* iterator = firstNewMonad;
-                    int index = 0;
-                    do
+                    if (step == LINK)
                     {
-                        char* left = GenerateIDMalloc(index);
-                        if (!strcmp(left , payload))
+                        Monad* iterator = firstNewMonad;
+                        int index = 0;
+                        do
                         {
-                            Monad* iterator2 = firstNewMonad;
-                            int index2 = 0;
-                            do
+                            char* left = GenerateIDMalloc(index);
+                            if (!strcmp(left , payload))
                             {
-                                char* right = GenerateIDMalloc(index2);
-                                if (!strcmp(right , payload2) && AddLink(iterator , iterator2 , selectedMonad))
+                                Monad* iterator2 = firstNewMonad;
+                                int index2 = 0;
+                                do
                                 {
+                                    char* right = GenerateIDMalloc(index2);
+                                    if (!strcmp(selfID , payload2) && !strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))
+                                    {
+                                        free(right);
+                                        break;
+                                    }
                                     free(right);
-                                    break;
-                                }
-                                free(right);
-                                index2++;
-                                iterator2 = iterator2->next;
-                            } while (iterator2 != lastNewMonad);
+                                    index2++;
+                                    iterator2 = iterator2->next;
+                                } while (iterator2 != lastNewMonad);
+                                free(left);
+                                break;
+                            }
                             free(left);
-                            break;
-                        }
-                        free(left);
-                        index++;
-                        iterator = iterator->next;
-                    } while (iterator != lastNewMonad);
+                            index++;
+                            iterator = iterator->next;
+                        } while (iterator != lastNewMonad);
+                    }
+                    else if (step == INTERLINK)
+                    {
+
+                    }
                 }
                 free(payload);
                 free(payload2);
+                free(payload3);
                 payload = malloc(1);
                 payload2 = malloc(1);
+                payload3 = malloc(1);
                 payload[0] = '\0';
                 payload2[0] = '\0';
+                payload3[0] = '\0';
                 payloadIndex = 0;
             break;
             case '>':
-                payloadIndex = 1;
+                payloadIndex++;
             break;
             default:
                 char addChar[2] = {*progress , '\0'};
-                if(payloadIndex == 1)
+                switch (payloadIndex)
                 {
-                    payload2 = AppendMallocDiscard(payload2 , addChar , DISCARD_FIRST);
-                }
-                else
-                {
-                    payload = AppendMallocDiscard(payload , addChar , DISCARD_FIRST);
+                    case 0:
+                        payload = AppendMallocDiscard(payload , addChar , DISCARD_FIRST);
+                    break;
+                    case 1:
+                        payload2 = AppendMallocDiscard(payload2 , addChar , DISCARD_FIRST);
+                    break;
+                    case 2:
+                        payload3 = AppendMallocDiscard(payload3 , addChar , DISCARD_FIRST);
                 }
         }
         progress++;
     }
+    free(ID);
     free(payload);
     free(payload2);
+    free(payload3);
     printf("Monad - no end bracket: %s\n" , selectedMonad->name);
     return progress;
 }
