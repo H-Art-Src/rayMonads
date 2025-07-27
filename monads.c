@@ -545,7 +545,42 @@ char* PruneForbiddenCharactersMalloc(char* name)
     return newName;
 }
 
-void PrintMonadsRecursive(Monad* MonadPtr, int index, char** outRef) //outref remains the same value through the entire recursion, is that okay?
+int FindDepthDifferenceRecursive(const Monad* OriginalMonad , const Monad* start , const Monad* end , const int Depth)
+{
+    Monad* rootMonadPtr = MonadPtr->rootSubMonads;
+    if (rootMonadPtr)
+    {
+        int subIndex = 0;
+        Monad* iterator = rootMonadPtr;
+        do
+        {
+            int result = FindDepthDifferenceRecursive(iterator , start , end , Depth + 1)
+            if (result != -1)
+            {
+                return result;
+            }
+            Link* rootLinkPtr = MonadPtr->rootSubLink;
+            if (rootLinkPtr)
+            {
+                Link* iteratorLink = rootLinkPtr;
+                do
+                {
+                    if(start == iteratorLink->start && end == iteratorLink->end)
+                    {
+                        return depth;
+                    }
+                    iteratorLink = iteratorLink->next;
+                } while (iteratorLink != rootLinkPtr);
+            }
+            iterator = iterator->next;
+            subIndex++;
+        } while (iterator != rootMonadPtr);
+        out = *outRef; // Old reference is most certainly freed in recursive calls. Update.
+    }
+    return -1;
+}
+
+void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, const int depth, const int index, char** outRef) //outref remains the same value through the entire recursion, is that okay?
 {
     char* out = *outRef;
     out = AppendMallocDiscard(out , "[" , DISCARD_FIRST);
@@ -563,7 +598,7 @@ void PrintMonadsRecursive(Monad* MonadPtr, int index, char** outRef) //outref re
         Monad* iterator = rootMonadPtr;
         do
         {
-            PrintMonadsRecursive(iterator, subIndex, outRef);
+            PrintMonadsRecursive(iterator , OriginalMonad , depth + 1 , subIndex , outRef);
             iterator = iterator->next;
             subIndex++;
         } while (iterator != rootMonadPtr);
@@ -599,6 +634,8 @@ void PrintMonadsRecursive(Monad* MonadPtr, int index, char** outRef) //outref re
                                 if (matchingIterator3 == iterator->endMonad)
                                 {
                                     out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex) , DISCARD_BOTH);
+                                    out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
+                                    out = AppendMallocDiscard(out , GenerateIDMalloc(FindDepthDifferenceRecursive()) , DISCARD_BOTH);
                                     out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
                                     out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex2) , DISCARD_BOTH);
                                     out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
@@ -651,7 +688,7 @@ enum interpretStep
     LINK
 };
 
-char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
+char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const Monad* OriginalMonad , const char* in)
 {
     char* progress = (char*)in + 1; //adding 1 assuming it's coming right after a '['.
     char* selfID = malloc(1);
@@ -692,7 +729,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 {
                     firstNewMonad = newMonadPtr;
                 }
-                progress = InterpretAddMonadsAndLinksRecursive(newMonadPtr , progress);
+                progress = InterpretAddMonadsAndLinksRecursive(newMonadPtr , OriginalMonad , progress);
                 subCount++;
             break;
             case ']':
@@ -778,10 +815,12 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                     case 0:
                         payload = AppendMallocDiscard(payload , addChar , DISCARD_FIRST);
                     break;
-                    case 1:
-                        payload2 = AppendMallocDiscard(payload2 , addChar , DISCARD_FIRST);
+                    case 1://leave interlinks for another recursive function.
                     break;
                     case 2:
+                        payload2 = AppendMallocDiscard(payload2 , addChar , DISCARD_FIRST);
+                    break;
+                    case 3:
                         payload3 = AppendMallocDiscard(payload3 , addChar , DISCARD_FIRST);
                 }
         }
@@ -911,7 +950,7 @@ int main(void)
                     EndDrawing();
                     char* out = malloc(1);
                     out[0] = '\0';
-                    PrintMonadsRecursive(selectedMonad , 0 , &out);
+                    PrintMonadsRecursive(selectedMonad , selectedMonad , 0 , &out);
                     printf("%s\n" , out);
                     SetClipboardText(out);
                     free(out);
