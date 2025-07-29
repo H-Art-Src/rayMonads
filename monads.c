@@ -545,73 +545,41 @@ char* PruneForbiddenCharactersMalloc(char* name)
     return newName;
 }
 
-typedef struct DifferenceResult
+//Finds interlinks.
+typedef struct DepthResult
 {
+    Monad* containerMonad;
+    Monad* sharedMonad;
     int depth;
-    bool isFinal;
-} DifferenceResult;
+    int sharedDepth;
 
-int FindDepthOfObject(const Monad* selectedMonad , const Monad* findMonad , const int Depth)
+} DepthResult;
+DepthResult FindDepthOfObject(const Monad* selectedMonad , const Monad* findMonad , const Monad* findCousinMonad , const int Depth)
 {
     Monad* rootMonadPtr = selectedMonad->rootSubMonads;
     if (rootMonadPtr)
     {
         Monad* iterator = rootMonadPtr;
+        DepthResult result;
         do
         {
             if (findMonad == iterator)
             {
-                return Depth;
+                return (DepthResult){selectedMonad , NULL , Depth , -1};
             }
-            int result = FindDepthOfObject(iterator , findMonad , Depth + 1);
-            if (result != -1)
+            result = FindDepthOfObject(iterator , findMonad , findCousinMonad , Depth + 1);
+            if (result.containerMonad)
             {
-                return result;
-            }
-            iterator = iterator->next;
-        } while (iterator != rootMonadPtr);
-    }
-    return -1;
-}
-
-DifferenceResult FindDepthDifferenceRecursive(const Monad* selectedMonad , const Monad* OriginalMonad , const Monad* start , const Monad* end , const int Depth)
-{
-    Monad* rootMonadPtr = selectedMonad->rootSubMonads;
-    if (rootMonadPtr)
-    {
-        Monad* iterator = rootMonadPtr;
-        do
-        {
-            Link* rootLinkPtr = selectedMonad->rootSubLink;
-            if (rootLinkPtr)
-            {
-                Link* iteratorLink = rootLinkPtr;
-                do
+                //container found, have to find shared TODO
+                if (result.sharedMonad)
                 {
-                    if(start == iteratorLink->startMonad && end == iteratorLink->endMonad)
-                    {
-                        return (DifferenceResult){Depth , false};
-                    }
-                    iteratorLink = iteratorLink->next;
-                } while (iteratorLink != rootLinkPtr);
-            }
-            DifferenceResult result = FindDepthDifferenceRecursive(iterator , OriginalMonad , start , end , Depth + 1);
-            if (result.depth != -1)
-            {
-                if(result.isFinal)
-                {
-                    return (DifferenceResult){result.depth , true};
-                }
-                else
-                {
-                    //TODO Find out if it's start or end of the link.
-                    return (DifferenceResult){result.depth - FindDepthOfObject(selectedMonad , start , 0) , true};
+                    return result;
                 }
             }
             iterator = iterator->next;
         } while (iterator != rootMonadPtr);
     }
-    return (DifferenceResult){-1 , false};
+    return (DepthResult){NULL , NULL , -1 , -1};
 }
 
 void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, const int depth, const int index, char** outRef) //outref remains the same value through the entire recursion, is that okay?
@@ -648,6 +616,7 @@ void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, con
         Link* iterator = rootLinkPtr;
         do
         {
+            DepthResult depthResult = FindDepthOfObject(OriginalMonad , iterator->startMonad , iterator->endMonad , 0); //TODO find if it should be start or end.
             int subIndex = 0;
             Monad* matchingIterator = rootMonadPtr;
             do
@@ -660,16 +629,16 @@ void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, con
                     do
                     {
                         int subIndex3 = 0;
-                        Monad* matchingIterator3 = matchingIterator2->rootSubMonads;
+                        Monad* matchingIterator3 = depthResult.containerMonad; //was matchingIterator2->rootSubMonads;
                         if (matchingIterator3)
                         {
                             do
                             {
-                                if (matchingIterator3 == iterator->endMonad)
+                                if (matchingIterator3 == iterator->startMonad) // was endMonad.
                                 {
                                     out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex) , DISCARD_BOTH);
                                     out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
-                                    out = AppendMallocDiscard(out , GenerateIDMalloc(FindDepthDifferenceRecursive(OriginalMonad , OriginalMonad , iterator->startMonad , iterator->endMonad , 0).depth) , DISCARD_BOTH);
+                                    out = AppendMallocDiscard(out , GenerateIDMalloc(depthResult.sharedDepth) , DISCARD_BOTH); //Must "jump" by this amount.
                                     out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
                                     out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex2) , DISCARD_BOTH);
                                     out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
@@ -679,7 +648,7 @@ void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, con
                                 }
                                 matchingIterator3 = matchingIterator3->next;
                                 subIndex3++;
-                            } while (matchingIterator3 != matchingIterator2->rootSubMonads);
+                            } while (matchingIterator3 != depthResult.containerMonad); // was matchingIterator2->rootSubMonads
                         }
                         if(provenParentRoot)
                         {
