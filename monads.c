@@ -545,7 +545,13 @@ char* PruneForbiddenCharactersMalloc(char* name)
     return newName;
 }
 
-int FindDepthDifferenceRecursive(const Monad* OriginalMonad , const Monad* start , const Monad* end , const int Depth)
+typedef struct DifferenceResult
+{
+    int depth;
+    bool isDifference;
+}
+
+DifferenceResult FindDepthDifferenceRecursive(const Monad* OriginalMonad , const Monad* start , const Monad* end , const int Depth)
 {
     Monad* rootMonadPtr = MonadPtr->rootSubMonads;
     if (rootMonadPtr)
@@ -554,10 +560,14 @@ int FindDepthDifferenceRecursive(const Monad* OriginalMonad , const Monad* start
         Monad* iterator = rootMonadPtr;
         do
         {
-            int result = FindDepthDifferenceRecursive(iterator , start , end , Depth + 1)
-            if (result != -1)
+            DifferenceResult result = FindDepthDifferenceRecursive(iterator , start , end , Depth + 1)
+            if (result.depth != -1)
             {
-                return result;
+                if(result.isDifference)
+                {
+                    return (DifferenceResult){result - Depth , true}
+                }
+                return (DifferenceResult){result - Depth , true};
             }
             Link* rootLinkPtr = MonadPtr->rootSubLink;
             if (rootLinkPtr)
@@ -567,7 +577,7 @@ int FindDepthDifferenceRecursive(const Monad* OriginalMonad , const Monad* start
                 {
                     if(start == iteratorLink->start && end == iteratorLink->end)
                     {
-                        return depth;
+                        return (DifferenceResult){depth , true};
                     }
                     iteratorLink = iteratorLink->next;
                 } while (iteratorLink != rootLinkPtr);
@@ -577,7 +587,7 @@ int FindDepthDifferenceRecursive(const Monad* OriginalMonad , const Monad* start
         } while (iterator != rootMonadPtr);
         out = *outRef; // Old reference is most certainly freed in recursive calls. Update.
     }
-    return -1;
+    return (DifferenceResult){-1 , false};
 }
 
 void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, const int depth, const int index, char** outRef) //outref remains the same value through the entire recursion, is that okay?
