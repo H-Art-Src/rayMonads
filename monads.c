@@ -561,13 +561,14 @@ int FindDepthOfObject(const Monad* selectedMonad , const Monad* findMonad , cons
         {
             if (findMonad == iterator)
             {
-                return Depth + 1;
+                return Depth;
             }
             int result = FindDepthOfObject(iterator , findMonad , Depth + 1);
             if (result != -1)
             {
                 return result;
             }
+            iterator = iterator->next;
         } while (iterator != rootMonadPtr);
     }
     return -1;
@@ -578,7 +579,6 @@ DifferenceResult FindDepthDifferenceRecursive(const Monad* selectedMonad , const
     Monad* rootMonadPtr = selectedMonad->rootSubMonads;
     if (rootMonadPtr)
     {
-        int subIndex = 0;
         Monad* iterator = rootMonadPtr;
         do
         {
@@ -604,12 +604,11 @@ DifferenceResult FindDepthDifferenceRecursive(const Monad* selectedMonad , const
                 }
                 else
                 {
-                    //TODO
-                    return (DifferenceResult){result.depth - Depth , false};
+                    //TODO Find out if it's start or end of the link.
+                    return (DifferenceResult){result.depth - FindDepthOfObject(selectedMonad , start , 0) , true};
                 }
             }
             iterator = iterator->next;
-            subIndex++;
         } while (iterator != rootMonadPtr);
     }
     return (DifferenceResult){-1 , false};
