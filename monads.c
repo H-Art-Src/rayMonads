@@ -560,20 +560,33 @@ DepthResult FindDepthOfObject(const Monad* selectedMonad , const Monad* findMona
     if (rootMonadPtr)
     {
         Monad* iterator = rootMonadPtr;
-        DepthResult result;
         do
         {
             if (findMonad == iterator)
             {
                 return (DepthResult){selectedMonad , NULL , Depth , -1};
             }
-            result = FindDepthOfObject(iterator , findMonad , findCousinMonad , Depth + 1);
+            DepthResult result = FindDepthOfObject(iterator , findMonad , findCousinMonad , Depth + 1);
             if (result.containerMonad)
             {
-                //container found, have to find shared TODO
-                if (result.sharedMonad)
+                if (result.sharedMonad || !findCousinMonad)
                 {
                     return result;
+                }
+                else
+                {
+                    Monad* iterator2 = rootMonadPtr;
+                    do
+                    {
+                        DepthResult searchForShared = FindDepthOfObject(iterator2 , findCousinMonad , NULL , Depth + 1);
+                        if (searchForShared.containerMonad)
+                        {
+                            printf("found it\n");
+                            return (DepthResult){result.containerMonad , selectedMonad , result.depth , Depth}; // final return.
+                        }
+                        iterator2 = iterator2->next;
+                    } while (iterator2 != rootMonadPtr);
+                    return (DepthResult){result.containerMonad , NULL , result.depth , -1};
                 }
             }
             iterator = iterator->next;
@@ -616,7 +629,7 @@ void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, con
         Link* iterator = rootLinkPtr;
         do
         {
-            DepthResult depthResult = FindDepthOfObject(OriginalMonad , iterator->startMonad , iterator->endMonad , 0); //TODO find if it should be start or end.
+            DepthResult depthResult = FindDepthOfObject(OriginalMonad , iterator->endMonad , iterator->startMonad , 0); //TODO find if it should be start or end.
             int subIndex = 0;
             Monad* matchingIterator = rootMonadPtr;
             do
