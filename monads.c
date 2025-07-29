@@ -548,44 +548,69 @@ char* PruneForbiddenCharactersMalloc(char* name)
 typedef struct DifferenceResult
 {
     int depth;
-    bool isDifference;
+    bool isFinal;
+} DifferenceResult;
+
+int FindDepthOfObject(const Monad* selectedMonad , const Monad* findMonad , const int Depth)
+{
+    Monad* rootMonadPtr = selectedMonad->rootSubMonads;
+    if (rootMonadPtr)
+    {
+        Monad* iterator = rootMonadPtr;
+        do
+        {
+            if (findMonad == iterator)
+            {
+                return Depth + 1;
+            }
+            int result = FindDepthOfObject(iterator , findMonad , Depth + 1);
+            if (result != -1)
+            {
+                return result;
+            }
+        } while (iterator != rootMonadPtr);
+    }
+    return -1;
 }
 
-DifferenceResult FindDepthDifferenceRecursive(const Monad* OriginalMonad , const Monad* start , const Monad* end , const int Depth)
+DifferenceResult FindDepthDifferenceRecursive(const Monad* selectedMonad , const Monad* OriginalMonad , const Monad* start , const Monad* end , const int Depth)
 {
-    Monad* rootMonadPtr = MonadPtr->rootSubMonads;
+    Monad* rootMonadPtr = selectedMonad->rootSubMonads;
     if (rootMonadPtr)
     {
         int subIndex = 0;
         Monad* iterator = rootMonadPtr;
         do
         {
-            DifferenceResult result = FindDepthDifferenceRecursive(iterator , start , end , Depth + 1)
-            if (result.depth != -1)
-            {
-                if(result.isDifference)
-                {
-                    return (DifferenceResult){result - Depth , true}
-                }
-                return (DifferenceResult){result - Depth , true};
-            }
-            Link* rootLinkPtr = MonadPtr->rootSubLink;
+            Link* rootLinkPtr = selectedMonad->rootSubLink;
             if (rootLinkPtr)
             {
                 Link* iteratorLink = rootLinkPtr;
                 do
                 {
-                    if(start == iteratorLink->start && end == iteratorLink->end)
+                    if(start == iteratorLink->startMonad && end == iteratorLink->endMonad)
                     {
-                        return (DifferenceResult){depth , true};
+                        return (DifferenceResult){Depth , false};
                     }
                     iteratorLink = iteratorLink->next;
                 } while (iteratorLink != rootLinkPtr);
             }
+            DifferenceResult result = FindDepthDifferenceRecursive(iterator , OriginalMonad , start , end , Depth + 1);
+            if (result.depth != -1)
+            {
+                if(result.isFinal)
+                {
+                    return (DifferenceResult){result.depth , true};
+                }
+                else
+                {
+                    //TODO
+                    return (DifferenceResult){result.depth - Depth , false};
+                }
+            }
             iterator = iterator->next;
             subIndex++;
         } while (iterator != rootMonadPtr);
-        out = *outRef; // Old reference is most certainly freed in recursive calls. Update.
     }
     return (DifferenceResult){-1 , false};
 }
@@ -645,7 +670,7 @@ void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, con
                                 {
                                     out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex) , DISCARD_BOTH);
                                     out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
-                                    out = AppendMallocDiscard(out , GenerateIDMalloc(FindDepthDifferenceRecursive()) , DISCARD_BOTH);
+                                    out = AppendMallocDiscard(out , GenerateIDMalloc(FindDepthDifferenceRecursive(OriginalMonad , OriginalMonad , iterator->startMonad , iterator->endMonad , 0).depth) , DISCARD_BOTH);
                                     out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
                                     out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex2) , DISCARD_BOTH);
                                     out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
@@ -960,7 +985,7 @@ int main(void)
                     EndDrawing();
                     char* out = malloc(1);
                     out[0] = '\0';
-                    PrintMonadsRecursive(selectedMonad , selectedMonad , 0 , &out);
+                    PrintMonadsRecursive(selectedMonad , selectedMonad , 0 , 0 , &out);
                     printf("%s\n" , out);
                     SetClipboardText(out);
                     free(out);
@@ -973,7 +998,7 @@ int main(void)
                     BeginDrawing();
                     DrawText("PASTING", GetScreenHeight()/2 - 100, GetScreenWidth()/2 - 100, 48, ORANGE);
                     EndDrawing();
-                    InterpretAddMonadsAndLinksRecursive(selectedMonad , GetClipboardText());
+                    InterpretAddMonadsAndLinksRecursive(selectedMonad , selectedMonad , GetClipboardText());
                     strcpy(monadLog, "Pasted text data in [");
                     strcat(monadLog, selectedMonad->name);
                     strcat(monadLog, "] from clipboard.");   
