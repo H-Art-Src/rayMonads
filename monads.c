@@ -667,7 +667,7 @@ void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, con
                                     out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
                                     out = AppendMallocDiscard(out , GenerateIDMalloc(depthResult.sharedDepth) , DISCARD_BOTH); //Must "jump" by this amount.
                                     out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
-                                    out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex2) , DISCARD_BOTH); // Jump up this amount.
+                                    out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex2) , DISCARD_BOTH); // final sub monad index.
                                     out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
                                     out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex3) , DISCARD_BOTH); // end monad
                                     out = AppendMallocDiscard(out , ";" , DISCARD_FIRST);
@@ -835,12 +835,12 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const Mon
                 payload2[0] = '\0';
                 payload3[0] = '\0';
                 payloadIndex = 0;
-                ignoreLink = true;
+                enableLink = true;
             break;
             case '>':
                 if(payloadIndex >= 3) //leave interlinks for the other recursive function.
                 {
-                    ignoreLink = false;
+                    enableLink = false;
                 }
                 else
                 {
