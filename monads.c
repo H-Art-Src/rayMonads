@@ -559,7 +559,7 @@ DepthResult FindDepthOfObject(const Monad* selectedMonad , const Monad* findMona
 {
     if (selectedMonad == findMonad)
     {
-        return (DepthResult){NULL , NULL , Depth , -1};
+        return (DepthResult){NULL , NULL , NULL , Depth , -1};
     }
     Monad* rootMonadPtr = selectedMonad->rootSubMonads;
     if (rootMonadPtr)
@@ -595,7 +595,7 @@ DepthResult FindDepthOfObject(const Monad* selectedMonad , const Monad* findMona
             iterator = iterator->next;
         } while (iterator != rootMonadPtr);
     }
-    return (DepthResult){NULL , NULL , -1 , -1};
+    return (DepthResult){NULL , NULL , NULL , -1 , -1};
 }
 
 void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, const int depth, const int index, char** outRef) //outref remains the same value through the entire recursion, is that okay?
