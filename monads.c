@@ -725,6 +725,9 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const Mon
     char* payload = malloc(1);
     char* payload2 = malloc(1);
     char* payload3 = malloc(1);
+    Monad* rootMonadPtr = selectedMonad->rootSubMonads;
+    Monad* firstNewMonad = NULL;
+    Monad* lastNewMonad = NULL;
     selfID[0] = '\0';
     payload[0] = '\0';
     payload2[0] = '\0';
@@ -732,9 +735,7 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const Mon
     char payloadIndex = 0;
     char step = ID;
     int subCount = 0;
-    Monad* rootMonadPtr = selectedMonad->rootSubMonads;
-    Monad* firstNewMonad = NULL;
-    Monad* lastNewMonad = NULL;
+    bool enableLink = true;
     if (rootMonadPtr)
     {
         Monad* iterator = rootMonadPtr;
@@ -793,7 +794,7 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const Mon
                 step++;
             break;
             case ';':
-                if (firstNewMonad && lastNewMonad)
+                if (firstNewMonad && lastNewMonad && enableLink)
                 {
                     Monad* iterator = firstNewMonad;
                     int index = 0;
@@ -834,24 +835,35 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const Mon
                 payload2[0] = '\0';
                 payload3[0] = '\0';
                 payloadIndex = 0;
+                ignoreLink = true;
             break;
             case '>':
-                payloadIndex++;
+                if(payloadIndex >= 3) //leave interlinks for the other recursive function.
+                {
+                    ignoreLink = false;
+                }
+                else
+                {
+                    payloadIndex++;
+                }
             break;
             default:
-                char addChar[2] = {*progress , '\0'};
-                switch (payloadIndex)
+                if (enableLink)
                 {
-                    case 0:
-                        payload = AppendMallocDiscard(payload , addChar , DISCARD_FIRST);
-                    break;
-                    case 1://leave interlinks for another recursive function.
-                    break;
-                    case 2:
-                        payload2 = AppendMallocDiscard(payload2 , addChar , DISCARD_FIRST);
-                    break;
-                    case 3:
-                        payload3 = AppendMallocDiscard(payload3 , addChar , DISCARD_FIRST);
+                    char addChar[2] = {*progress , '\0'};
+                    switch (payloadIndex)
+                    {
+                        case 0:
+                            payload = AppendMallocDiscard(payload , addChar , DISCARD_FIRST);
+                        break;
+                        case 1://leave interlinks for the other recursive function.
+                        break;
+                        case 2:
+                            payload2 = AppendMallocDiscard(payload2 , addChar , DISCARD_FIRST);
+                        break;
+                        case 3:
+                            payload3 = AppendMallocDiscard(payload3 , addChar , DISCARD_FIRST);
+                    }
                 }
         }
         progress++;
