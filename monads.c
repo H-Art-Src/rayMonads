@@ -876,6 +876,17 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const Mon
     return progress;
 }
 
+void MonadsExample(Monad* GodMonad)
+{
+    AddMonad((Vector2) { 600, 500 }, GodMonad);
+    AddMonad((Vector2) { 200, 400 }, GodMonad);
+    Monad* interLinkExample = AddMonad((Vector2) { 100, 100 }, AddMonad((Vector2) { 350, 200 }, GodMonad));
+    Monad* example = AddMonad((Vector2) { 400, 400 }, GodMonad);
+    Monad* interLinkExample2 = AddMonad((Vector2) { 440, 410 }, example);
+    AddLink(AddMonad((Vector2) { 400, 450 }, example) , AddMonad((Vector2) { 500, 500 }, example) , example);
+    AddLink(interLinkExample , interLinkExample2 , example);
+}
+
 int main(void)
 {
     // Initialization
@@ -912,13 +923,7 @@ int main(void)
 
     // Testing
     //--------------------------------------------------------------------------------------    
-    AddMonad((Vector2) { 600, 500 }, GodMonad);
-    AddMonad((Vector2) { 200, 400 }, GodMonad);
-    AddMonad((Vector2) { 100, 100 }, AddMonad((Vector2) { 350, 200 }, GodMonad));
-
-    Monad* example = AddMonad((Vector2) { 400, 400 }, GodMonad);
-    AddMonad((Vector2) { 440, 410 }, example);
-    AddLink(AddMonad((Vector2) { 400, 450 }, example) , AddMonad((Vector2) { 500, 500 }, example) , example);
+    MonadsExample(GodMonad);
     //--------------------------------------------------------------------------------------
 
     // Main loop
