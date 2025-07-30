@@ -726,6 +726,7 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const Mon
     char* payload2 = malloc(1);
     char* payload3 = malloc(1);
     Monad* rootMonadPtr = selectedMonad->rootSubMonads;
+    Monad* newMonadPtr = NULL;
     Monad* firstNewMonad = NULL;
     Monad* lastNewMonad = NULL;
     selfID[0] = '\0';
@@ -755,7 +756,7 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const Mon
                 {
                     newV2 = (Vector2){GetScreenWidth() - 70.0f , GetScreenHeight() - 70.0f};
                 }
-                Monad* newMonadPtr = AddMonad(newV2 , selectedMonad);
+                newMonadPtr = AddMonad(newV2 , selectedMonad);
                 if (!firstNewMonad)
                 {
                     firstNewMonad = newMonadPtr;
@@ -779,7 +780,7 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const Mon
                     strncpy(selectedMonad->name, payload, MAX_MONAD_NAME_SIZE);
                 break;
                 case SUB:
-                    lastNewMonad = selectedMonad->prev;
+                    lastNewMonad = newMonadPtr;
                 }
                 free(payload);
                 free(payload2);
@@ -797,6 +798,7 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const Mon
                 if (firstNewMonad && lastNewMonad && enableLink)
                 {
                     Monad* iterator = firstNewMonad;
+                    Monad* stopMonad = lastNewMonad->next;
                     int index = 0;
                     do
                     {
@@ -816,14 +818,14 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const Mon
                                 free(right);
                                 index2++;
                                 iterator2 = iterator2->next;
-                            } while (iterator2 != lastNewMonad);
+                            } while (iterator2 != stopMonad);
                             free(left);
                             break;
                         }
                         free(left);
                         index++;
                         iterator = iterator->next;
-                    } while (iterator != lastNewMonad);
+                    } while (iterator != stopMonad);
                 }
                 free(payload);
                 free(payload2);
