@@ -633,7 +633,7 @@ void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, con
         do
         {
             DepthResult depthResult = FindDepthOfObject(OriginalMonad , iterator->startMonad , iterator->endMonad , 0); //TODO find if it should be start or end.
-            printf("DR %p %p %i %i\n", depthResult.containerMonad , depthResult.cousinMonad , depthResult.depth , depthResult.sharedDepth);
+            printf("DR container:%p cousin:%p shared:%p depth: %i jump: %i\n", depthResult.containerMonad , depthResult.cousinMonad , depthResult.sharedMonad , depthResult.depth , depthResult.sharedDepth);
             int subIndex = 0;
             Monad* matchingIterator = rootMonadPtr;
             do
@@ -641,11 +641,11 @@ void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, con
                 if (matchingIterator == iterator->startMonad)
                 {
                     int subIndex2 = index;
-                    Monad* provenParentRoot = NULL;//only match with it2.
+                    Monad* provenParentRoot = NULL;//only match with iterator2.
                     Monad* matchingIterator2 = MonadPtr;//Now we're matching the function call's monad itself.
-                    do
+                    do //TODO this while loop duplicates interlinks.
                     {
-                        int subIndex3 = 0;//TODO SUBROOT INSTEAD YOU DOLT
+                        int subIndex3 = 0;
                         Monad* matchingIterator3 = NULL; //was matchingIterator2->rootSubMonads;
                         if (depthResult.cousinMonad)
                         {
