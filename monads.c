@@ -774,7 +774,7 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const Mon
                 switch (step)
                 {
                 case ID:
-                    selfID = AppendMallocDiscard(selfID , payload , DISCARD_BOTH);
+                    selfID = AppendMallocDiscard(selfID , payload , DISCARD_FIRST);
                 break;
                 case NAME:
                     strncpy(selectedMonad->name, payload, MAX_MONAD_NAME_SIZE);
