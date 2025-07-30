@@ -549,6 +549,7 @@ char* PruneForbiddenCharactersMalloc(char* name)
 typedef struct DepthResult
 {
     Monad* containerMonad;
+    Monad* cousinMonad;
     Monad* sharedMonad;
     int depth;
     int sharedDepth;
@@ -556,38 +557,40 @@ typedef struct DepthResult
 } DepthResult;
 DepthResult FindDepthOfObject(const Monad* selectedMonad , const Monad* findMonad , const Monad* findCousinMonad , const int Depth)
 {
+    if (selectedMonad == findMonad)
+    {
+        return (DepthResult){NULL , NULL , Depth , -1};
+    }
     Monad* rootMonadPtr = selectedMonad->rootSubMonads;
     if (rootMonadPtr)
     {
         Monad* iterator = rootMonadPtr;
         do
         {
-            if (findMonad == iterator)
-            {
-                return (DepthResult){selectedMonad , NULL , Depth , -1};
-            }
             DepthResult result = FindDepthOfObject(iterator , findMonad , findCousinMonad , Depth + 1);
-            if (result.containerMonad)
+            if (result.depth != -1)
             {
-                if (result.sharedMonad || !findCousinMonad)
+                if (!result.containerMonad)
                 {
-                    return result;
+                    result.containerMonad = selectedMonad;
                 }
-                else
+                if (result.sharedDepth == -1 && findCousinMonad)
                 {
                     Monad* iterator2 = rootMonadPtr;
                     do
                     {
-                        DepthResult searchForShared = FindDepthOfObject(iterator2 , findCousinMonad , NULL , Depth + 1);
-                        if (searchForShared.containerMonad)
+                        DepthResult cousinResult = FindDepthOfObject(iterator2 , findCousinMonad , NULL , Depth + 1);
+                        if (cousinResult.depth != -1) // If it's found, simply
                         {
-                            printf("found it\n");
-                            return (DepthResult){result.containerMonad , selectedMonad , result.depth , Depth}; // final return.
+                            result.sharedMonad = selectedMonad;
+                            result.cousinMonad = cousinResult.containerMonad;
+                            result.sharedDepth = Depth;
+                            break;
                         }
                         iterator2 = iterator2->next;
                     } while (iterator2 != rootMonadPtr);
-                    return (DepthResult){result.containerMonad , NULL , result.depth , -1};
                 }
+                return result;
             }
             iterator = iterator->next;
         } while (iterator != rootMonadPtr);
@@ -629,7 +632,8 @@ void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, con
         Link* iterator = rootLinkPtr;
         do
         {
-            DepthResult depthResult = FindDepthOfObject(OriginalMonad , iterator->endMonad , iterator->startMonad , 0); //TODO find if it should be start or end.
+            DepthResult depthResult = FindDepthOfObject(OriginalMonad , iterator->startMonad , iterator->endMonad , 0); //TODO find if it should be start or end.
+            printf("DR %p %p %i %i\n", depthResult.containerMonad , depthResult.cousinMonad , depthResult.depth , depthResult.sharedDepth);
             int subIndex = 0;
             Monad* matchingIterator = rootMonadPtr;
             do
@@ -641,27 +645,37 @@ void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, con
                     Monad* matchingIterator2 = MonadPtr;//Now we're matching the function call's monad itself.
                     do
                     {
-                        int subIndex3 = 0;
-                        Monad* matchingIterator3 = depthResult.containerMonad; //was matchingIterator2->rootSubMonads;
+                        int subIndex3 = 0;//TODO SUBROOT INSTEAD YOU DOLT
+                        Monad* matchingIterator3 = NULL; //was matchingIterator2->rootSubMonads;
+                        if (depthResult.cousinMonad)
+                        {
+                            matchingIterator3 = depthResult.cousinMonad->rootSubMonads;
+                        }
+                        else if (depthResult.containerMonad)
+                        {
+                            matchingIterator3 = depthResult.containerMonad->rootSubMonads;
+                        }
                         if (matchingIterator3)
                         {
+                            Monad* Iterator3Root = matchingIterator3;
                             do
                             {
-                                if (matchingIterator3 == iterator->startMonad) // was endMonad.
+                                if (matchingIterator3 == iterator->endMonad && matchingIterator3) // was endMonad.
                                 {
-                                    out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex) , DISCARD_BOTH);
+                                    printf("Final Jump address: %i\n" , depthResult.sharedDepth);
+                                    out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex) , DISCARD_BOTH);// start monad index
                                     out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
                                     out = AppendMallocDiscard(out , GenerateIDMalloc(depthResult.sharedDepth) , DISCARD_BOTH); //Must "jump" by this amount.
                                     out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
-                                    out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex2) , DISCARD_BOTH);
+                                    out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex2) , DISCARD_BOTH); // Jump up this amount.
                                     out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
-                                    out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex3) , DISCARD_BOTH);
+                                    out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex3) , DISCARD_BOTH); // end monad
                                     out = AppendMallocDiscard(out , ";" , DISCARD_FIRST);
                                     break;
                                 }
                                 matchingIterator3 = matchingIterator3->next;
                                 subIndex3++;
-                            } while (matchingIterator3 != depthResult.containerMonad); // was matchingIterator2->rootSubMonads
+                            } while (matchingIterator3 != Iterator3Root); // was matchingIterator2->rootSubMonads
                         }
                         if(provenParentRoot)
                         {
