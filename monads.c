@@ -773,14 +773,14 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const Mon
             case ':':
                 switch (step)
                 {
-                case ID:
-                    selfID = AppendMallocDiscard(selfID , payload , DISCARD_FIRST);
-                break;
-                case NAME:
-                    strncpy(selectedMonad->name, payload, MAX_MONAD_NAME_SIZE);
-                break;
-                case SUB:
-                    lastNewMonad = newMonadPtr;
+                    case ID:
+                        selfID = AppendMallocDiscard(selfID , payload , DISCARD_FIRST);
+                    break;
+                    case NAME:
+                        strncpy(selectedMonad->name, payload, MAX_MONAD_NAME_SIZE);
+                    break;
+                    case SUB:
+                        lastNewMonad = newMonadPtr;
                 }
                 free(payload);
                 free(payload2);
@@ -1105,50 +1105,50 @@ int main(void)
 
         switch (mainResult.resultKey)
         {
-        case RESULT_NONE:
-            break;
-        case RESULT_CLICK:
-            selectedMonad = mainResult.resultMonad;
-            selectedLink = mainResult.resultLink;
-            printf("Object %p, Link %p\n", selectedMonad, selectedLink);
-            break;
-        case RESULT_RCLICK:
-            if (selectedMonad)
-            {
-                if (mainResult.resultMonad && mainResult.resultContainerMonad && (mainResult.resultDepth == selectedMonad->depth))
+            case RESULT_NONE:
+                break;
+            case RESULT_CLICK:
+                selectedMonad = mainResult.resultMonad;
+                selectedLink = mainResult.resultLink;
+                printf("Object %p, Link %p\n", selectedMonad, selectedLink);
+                break;
+            case RESULT_RCLICK:
+                if (selectedMonad)
                 {
-                    if (SameCategory(selectedMonad, mainResult.resultMonad))
-                        selectedLink = AddLink(selectedMonad, mainResult.resultMonad, mainResult.resultContainerMonad);
-                    else
-                        selectedLink = AddLink(mainResult.resultMonad, selectedMonad, mainResult.resultContainerMonad);
-                    if (selectedLink)
+                    if (mainResult.resultMonad && mainResult.resultContainerMonad && (mainResult.resultDepth == selectedMonad->depth))
                     {
-                        strcpy(monadLog, "Added link [");
-                        strcat(monadLog, selectedLink->startMonad->name);
-                        strcat(monadLog, "] to [");
-                        strcat(monadLog, selectedLink->endMonad->name);
-                        strcat(monadLog, "].");
+                        if (SameCategory(selectedMonad, mainResult.resultMonad))
+                            selectedLink = AddLink(selectedMonad, mainResult.resultMonad, mainResult.resultContainerMonad);
+                        else
+                            selectedLink = AddLink(mainResult.resultMonad, selectedMonad, mainResult.resultContainerMonad);
+                        if (selectedLink)
+                        {
+                            strcpy(monadLog, "Added link [");
+                            strcat(monadLog, selectedLink->startMonad->name);
+                            strcat(monadLog, "] to [");
+                            strcat(monadLog, selectedLink->endMonad->name);
+                            strcat(monadLog, "].");
+                        }
+                        selectedMonad = mainResult.resultMonad;
+                        selectedLink = NULL;
                     }
-                    selectedMonad = mainResult.resultMonad;
-                    selectedLink = NULL;
+                    else if (selectedDepth == selectedMonad->depth)
+                    {
+                        if (!mainResult.resultMonad && Vector2Distance(selectedMonad->avgCenter, mouseV2) >= 30.0f /*deny if too close to container.*/)
+                        {
+                            strcpy(monadLog, "Added object [");
+                            strcat(monadLog, AddMonad(mouseV2, selectedMonad)->name);
+                            strcat(monadLog, "].");
+                        }
+                        else if (selectedLink && (selectedLink->startMonad->depth == mainResult.resultMonad->depth))
+                        {
+                            strcpy(monadLog, "Changed link end object to [");
+                            strcat(monadLog, (selectedLink->endMonad = mainResult.resultMonad)->name);
+                            strcat(monadLog, "].");
+                        }
+                    }
                 }
-                else if (selectedDepth == selectedMonad->depth)
-                {
-                    if (!mainResult.resultMonad && Vector2Distance(selectedMonad->avgCenter, mouseV2) >= 30.0f /*deny if too close to container.*/)
-                    {
-                        strcpy(monadLog, "Added object [");
-                        strcat(monadLog, AddMonad(mouseV2, selectedMonad)->name);
-                        strcat(monadLog, "].");
-                    }
-                    else if (selectedLink && (selectedLink->startMonad->depth == mainResult.resultMonad->depth))
-                    {
-                        strcpy(monadLog, "Changed link end object to [");
-                        strcat(monadLog, (selectedLink->endMonad = mainResult.resultMonad)->name);
-                        strcat(monadLog, "].");
-                    }
-                }
-            }
-            break;
+                break;
         }
 
         if (selectedMonad && IsMouseButtonDown(MOUSE_BUTTON_LEFT) && (selectDrag || Vector2Distance(selectedMonad->avgCenter, mouseV2) <= 30.0f))
