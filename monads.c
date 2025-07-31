@@ -317,7 +317,7 @@ bool RemoveLink(Link* linkPtr, Monad* containingMonadPtr)
 #define INSCOPE functionDepth == selectedDepth
 #define PRESCOPE functionDepth < selectedDepth
 
-// Renders all Monads and Link. Returns activated Monad, it's container, if any and the depth. MonadPtr must not be null.
+//Renders all Monads and Link. Returns activated Monad, it's container, if any and the depth. MonadPtr must not be null.
 //TODO: Every recursive call adds all of the instructions of the function to RAM again. Which parts of this function can be separated into its own function so they don't get loaded in every time?
 //Or maybe... the compiler catches it already.
 struct ActiveResult RecursiveDraw(Monad* MonadPtr, int functionDepth, int selectedDepth)
@@ -660,24 +660,27 @@ void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, con
         Link* iterator = rootLinkPtr;
         do
         {
-            DepthResult depthResult = FindDepthOfObject(OriginalMonad , iterator->startMonad , iterator->endMonad , 0); //TODO find if it should be start or end.
+            DepthResult depthResult = FindDepthOfObject(OriginalMonad , iterator->startMonad , iterator->endMonad , 0);
             printf("DR container:%p cousin:%p shared:%p depth: %i jump: %i\n", depthResult.containerMonad , depthResult.cousinMonad , depthResult.sharedMonad , depthResult.depth , depthResult.sharedDepth);
-            int subIndex = 0;
-            Monad* matchingIterator = rootMonadPtr;
-            do
+            if (depthResult.sharedMonad)
             {
-                if (matchingIterator == depthResult.sharedDepth ? iterator->endMonad : iterator->startMonad)
+                int subIndex = 0;
+                Monad* matchingIterator = rootMonadPtr;
+                do
                 {
-                    out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex) , DISCARD_BOTH);// start monad index
-                    out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
-                    out = AppendMallocDiscard(out , GenerateIDMalloc(depthResult.sharedDepth) , DISCARD_BOTH); //Must "jump up" by this amount.
-                    out = AppendMallocDiscard(out , ChainCarrotAfterJumpStringRecursiveMalloc(depthResult.sharedMonad , depthResult.sharedDepth ? iterator->startMonad : iterator->endMonad), DISCARD_BOTH);
-                    out = AppendMallocDiscard(out , ";" , DISCARD_FIRST);
-                    break;
-                }
-                matchingIterator = matchingIterator->next;
-                subIndex++;
-            } while (matchingIterator != rootMonadPtr);
+                    if (matchingIterator == depthResult.sharedDepth ? iterator->endMonad : iterator->startMonad)
+                    {
+                        out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex) , DISCARD_BOTH);// start monad index
+                        out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
+                        out = AppendMallocDiscard(out , GenerateIDMalloc(depthResult.sharedDepth) , DISCARD_BOTH); //Must "jump up" by this amount.
+                        out = AppendMallocDiscard(out , ChainCarrotAfterJumpStringRecursiveMalloc(depthResult.sharedMonad , depthResult.sharedDepth ? iterator->startMonad : iterator->endMonad), DISCARD_BOTH);
+                        out = AppendMallocDiscard(out , ";" , DISCARD_FIRST);
+                        break;
+                    }
+                    matchingIterator = matchingIterator->next;
+                    subIndex++;
+                } while (matchingIterator != rootMonadPtr);
+            }
             iterator = iterator->next;
         } while (iterator != rootLinkPtr);
     }
