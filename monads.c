@@ -608,17 +608,19 @@ char* ChainCarrotAfterJumpStringRecursiveMalloc(Monad* sharedMonad , Monad* endM
         {
             if (matchingIterator == endMonad)
             {
-                ret = AppendMallocDiscard(GenerateIDMalloc(index) , "", DISCARD_FIRST);
-                return AppendMallocDiscard(ret , ">", DISCARD_FIRST);
+                ret = AppendMallocDiscard(ret , ">", DISCARD_FIRST);
+                return AppendMallocDiscard(ret , GenerateIDMalloc(index) , DISCARD_BOTH);
             }
             char* test = AppendMallocDiscard(ChainCarrotAfterJumpStringRecursiveMalloc(matchingIterator , endMonad) , "" , DISCARD_FIRST);
             if (test[0] != '\0') //mom get the camera.
             {
-                ret = AppendMallocDiscard(test , GenerateIDMalloc(index), DISCARD_BOTH);
-                return AppendMallocDiscard(ret , ">", DISCARD_FIRST);
+                ret = AppendMallocDiscard(ret , ">" , DISCARD_FIRST);
+                ret = AppendMallocDiscard(ret , GenerateIDMalloc(index) , DISCARD_BOTH);
+                return AppendMallocDiscard(ret , test , DISCARD_BOTH);
             }
             free(test);
             index++;
+            matchingIterator = matchingIterator->next;
         } while (matchingIterator != sharedMonad->rootSubMonads);
     }
     return ret;
@@ -664,13 +666,12 @@ void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, con
             Monad* matchingIterator = rootMonadPtr;
             do
             {
-                if (matchingIterator == iterator->startMonad)
+                if (matchingIterator == depthResult.sharedDepth ? iterator->endMonad : iterator->startMonad)
                 {
                     out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex) , DISCARD_BOTH);// start monad index
                     out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
                     out = AppendMallocDiscard(out , GenerateIDMalloc(depthResult.sharedDepth) , DISCARD_BOTH); //Must "jump up" by this amount.
-                    out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
-                    out = AppendMallocDiscard(out , ChainCarrotAfterJumpStringRecursiveMalloc(depthResult.sharedMonad , iterator->endMonad), DISCARD_BOTH);
+                    out = AppendMallocDiscard(out , ChainCarrotAfterJumpStringRecursiveMalloc(depthResult.sharedMonad , depthResult.sharedDepth ? iterator->startMonad : iterator->endMonad), DISCARD_BOTH);
                     out = AppendMallocDiscard(out , ";" , DISCARD_FIRST);
                     break;
                 }
@@ -815,7 +816,7 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const Mon
                 enableLink = true;
             break;
             case '>':
-                if(payloadIndex >= 3) //leave interlinks for the other recursive function.
+                if(payloadIndex >= 2) //leave interlinks for the other recursive function.
                 {
                     enableLink = false;
                 }
@@ -833,12 +834,10 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const Mon
                         case 0:
                             payload = AppendMallocDiscard(payload , addChar , DISCARD_FIRST);
                         break;
-                        case 1://leave interlinks for the other recursive function.
-                        break;
-                        case 2:
+                        case 1:
                             payload2 = AppendMallocDiscard(payload2 , addChar , DISCARD_FIRST);
                         break;
-                        case 3:
+                        case 2:
                             payload3 = AppendMallocDiscard(payload3 , addChar , DISCARD_FIRST);
                     }
                 }
