@@ -34,7 +34,6 @@ The following commands need a control key held down to function:
 -Key 'T' will rename the selected object to your clipboard contents.
 -Key 'C' will copy the selected object and recursively for its sub-objects as text data into your clipboard.
 -Key 'V' will paste the clipboard contents, assuming it's good text data, recursively into named sub-objects of the selected object. This renames the selected object as well.
-Note that only links to objects of the same parent can be copy and pasted.
 */
 
 #include "raylib.h"
@@ -550,7 +549,7 @@ typedef struct DepthResult
 {
     Monad* containerMonad;
     Monad* cousinMonad;
-    Monad* sharedMonad;
+    Monad* sharedMonad; //highest point where both container and cousin can be both traced to.
     int depth;
     int sharedDepth;
 
@@ -598,6 +597,33 @@ DepthResult FindDepthOfObject(const Monad* selectedMonad , const Monad* findMona
     return (DepthResult){NULL , NULL , NULL , -1 , -1};
 }
 
+char* ChainCarrotAfterJumpStringRecursiveMalloc(Monad* sharedMonad , Monad* endMonad)
+{
+    Monad* matchingIterator = sharedMonad->rootSubMonads;
+    char* ret = AppendMallocDiscard("","",DISCARD_NONE); // must malloc.
+    if (matchingIterator)
+    {
+        int index = 0;
+        do
+        {
+            if (matchingIterator == endMonad)
+            {
+                ret = AppendMallocDiscard(GenerateIDMalloc(index) , "", DISCARD_FIRST);
+                return AppendMallocDiscard(ret , ">", DISCARD_FIRST);
+            }
+            char* test = AppendMallocDiscard(ChainCarrotAfterJumpStringRecursiveMalloc(matchingIterator , endMonad) , "" , DISCARD_FIRST);
+            if (test[0] != '\0') //mom get the camera.
+            {
+                ret = AppendMallocDiscard(test , GenerateIDMalloc(index), DISCARD_BOTH);
+                return AppendMallocDiscard(ret , ">", DISCARD_FIRST);
+            }
+            free(test);
+            index++;
+        } while (matchingIterator != sharedMonad->rootSubMonads);
+    }
+    return ret;
+}
+
 void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, const int depth, const int index, char** outRef) //outref remains the same value through the entire recursion, is that okay?
 {
     char* out = *outRef;
@@ -640,69 +666,18 @@ void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, con
             {
                 if (matchingIterator == iterator->startMonad)
                 {
-                    int subIndex2 = index;
-                    Monad* provenParentRoot = NULL;//only match with iterator2.
-                    Monad* matchingIterator2 = MonadPtr;//Now we're matching the function call's monad itself.
-                    do //TODO this while loop duplicates interlinks.
-                    {
-                        int subIndex3 = 0;
-                        Monad* matchingIterator3 = NULL; //was matchingIterator2->rootSubMonads;
-                        if (depthResult.cousinMonad)
-                        {
-                            matchingIterator3 = depthResult.cousinMonad->rootSubMonads;
-                        }
-                        else if (depthResult.containerMonad)
-                        {
-                            matchingIterator3 = depthResult.containerMonad->rootSubMonads;
-                        }
-                        if (matchingIterator3)
-                        {
-                            Monad* Iterator3Root = matchingIterator3;
-                            do
-                            {
-                                if (matchingIterator3 == iterator->endMonad && matchingIterator3) // was endMonad.
-                                {
-                                    printf("Final Jump address: %i\n" , depthResult.sharedDepth);
-                                    out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex) , DISCARD_BOTH);// start monad index
-                                    out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
-                                    out = AppendMallocDiscard(out , GenerateIDMalloc(depthResult.sharedDepth) , DISCARD_BOTH); //Must "jump" by this amount.
-                                    out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
-                                    out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex2) , DISCARD_BOTH); // final sub monad index.
-                                    out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
-                                    out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex3) , DISCARD_BOTH); // end monad
-                                    out = AppendMallocDiscard(out , ";" , DISCARD_FIRST);
-                                    break;
-                                }
-                                matchingIterator3 = matchingIterator3->next;
-                                subIndex3++;
-                            } while (matchingIterator3 != Iterator3Root); // was matchingIterator2->rootSubMonads
-                        }
-                        if(provenParentRoot)
-                        {
-                            matchingIterator2 = MonadPtr->next;
-                            subIndex2++;
-                        }
-                        else
-                        {
-                            subIndex2--;
-                            if (!subIndex2)
-                            {
-                                provenParentRoot = matchingIterator2->prev;
-                                matchingIterator2 = MonadPtr->next;
-                                subIndex2 = index + 1;
-                            }
-                            else
-                            {
-                                matchingIterator2 = matchingIterator2->prev;
-                            }
-                        }
-                    } while (matchingIterator2 != provenParentRoot && subIndex2 > 0);
+                    out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex) , DISCARD_BOTH);// start monad index
+                    out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
+                    out = AppendMallocDiscard(out , GenerateIDMalloc(depthResult.sharedDepth) , DISCARD_BOTH); //Must "jump up" by this amount.
+                    out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
+                    out = AppendMallocDiscard(out , ChainCarrotAfterJumpStringRecursiveMalloc(depthResult.sharedMonad , iterator->endMonad), DISCARD_BOTH);
                     break;
                 }
                 matchingIterator = matchingIterator->next;
                 subIndex++;
             } while (matchingIterator != rootMonadPtr);
             iterator = iterator->next;
+            out = AppendMallocDiscard(out , ";" , DISCARD_FIRST);
         } while (iterator != rootLinkPtr);
     }
 
