@@ -671,13 +671,13 @@ void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, con
                     out = AppendMallocDiscard(out , GenerateIDMalloc(depthResult.sharedDepth) , DISCARD_BOTH); //Must "jump up" by this amount.
                     out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
                     out = AppendMallocDiscard(out , ChainCarrotAfterJumpStringRecursiveMalloc(depthResult.sharedMonad , iterator->endMonad), DISCARD_BOTH);
+                    out = AppendMallocDiscard(out , ";" , DISCARD_FIRST);
                     break;
                 }
                 matchingIterator = matchingIterator->next;
                 subIndex++;
             } while (matchingIterator != rootMonadPtr);
             iterator = iterator->next;
-            out = AppendMallocDiscard(out , ";" , DISCARD_FIRST);
         } while (iterator != rootLinkPtr);
     }
 
