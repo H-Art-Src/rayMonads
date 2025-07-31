@@ -881,6 +881,7 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , Monad* OriginalMonad ,
             subCount++;
         } while (iterator != rootMonadPtr);
     }
+    int subMonadStep = subCount;
     while (*progress != '\0')
     {
         switch(*progress)
@@ -888,12 +889,17 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , Monad* OriginalMonad ,
             case '[':
                 if (rootMonadPtr)
                 {
-                    int index = 0;
-                    Monad* iterator = rootMonadPtr;
+                    int index = subCount;
+                    Monad* iterator = rootMonadPtr->prev;
                     do
                     {
-                        progress = InterpretInterLinksRecursive(iterator , OriginalMonad , progress);
-                        break;
+                        if (index == subMonadStep)
+                        {
+                            progress = InterpretInterLinksRecursive(iterator , OriginalMonad , progress);
+                            subMonadStep--;
+                        }
+                        index--;
+                        iterator = iterator->prev; // going backwards as to only count new monads.
                     } while (iterator != rootMonadPtr);
                 }
                 subCount++;
@@ -909,9 +915,6 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , Monad* OriginalMonad ,
                 {
                     case ID:
                         selfID = AppendMallocDiscard(selfID , payload , DISCARD_FIRST);//TODO decode
-                    break;
-                    case NAME:
-                        strncpy(selectedMonad->name, payload, MAX_MONAD_NAME_SIZE);
                     break;
                     case SUB:
                         lastNewMonad = newMonadPtr;
@@ -931,35 +934,35 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , Monad* OriginalMonad ,
             case ';':
                 if (firstNewMonad && lastNewMonad)
                 {
-                    Monad* iterator = firstNewMonad;
-                    Monad* stopMonad = lastNewMonad->next;
-                    int index = 0;
-                    do
-                    {
-                        char* left = GenerateIDMalloc(index);
-                        if (!strcmp(left , payload))//TODO decode
-                        {
-                            Monad* iterator2 = firstNewMonad;
-                            int index2 = 0;
-                            do
-                            {
-                                char* right = GenerateIDMalloc(index2);
-                                if (strcmp("\0" , payload2) && !strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))//TODO decode
-                                {
-                                    free(right);
-                                    break;
-                                }
-                                free(right);
-                                index2++;
-                                iterator2 = iterator2->next;
-                            } while (iterator2 != stopMonad);
-                            free(left);
-                            break;
-                        }
-                        free(left);
-                        index++;
-                        iterator = iterator->next;
-                    } while (iterator != stopMonad);
+                    // Monad* iterator = firstNewMonad;
+                    // Monad* stopMonad = lastNewMonad->next;
+                    // int index = 0;
+                    // do
+                    // {
+                    //     char* left = GenerateIDMalloc(index);
+                    //     if (!strcmp(left , payload))//TODO decode
+                    //     {
+                    //         Monad* iterator2 = firstNewMonad;
+                    //         int index2 = 0;
+                    //         do
+                    //         {
+                    //             char* right = GenerateIDMalloc(index2);
+                    //             if (strcmp("\0" , payload2) && !strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))//TODO decode
+                    //             {
+                    //                 free(right);
+                    //                 break;
+                    //             }
+                    //             free(right);
+                    //             index2++;
+                    //             iterator2 = iterator2->next;
+                    //         } while (iterator2 != stopMonad);
+                    //         free(left);
+                    //         break;
+                    //     }
+                    //     free(left);
+                    //     index++;
+                    //     iterator = iterator->next;
+                    // } while (iterator != stopMonad);
                 }
                 free(payload);
                 free(payload2);
