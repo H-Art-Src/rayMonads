@@ -554,7 +554,7 @@ typedef struct DepthResult
     int sharedDepth;
 
 } DepthResult;
-DepthResult FindDepthOfObject(const Monad* selectedMonad , const Monad* findMonad , const Monad* findCousinMonad , const int Depth)
+DepthResult FindDepthOfObject(Monad* selectedMonad , Monad* findMonad , Monad* findCousinMonad , int Depth)
 {
     if (selectedMonad == findMonad)
     {
@@ -626,7 +626,7 @@ char* ChainCarrotAfterJumpStringRecursiveMalloc(Monad* sharedMonad , Monad* endM
     return ret;
 }
 
-void PrintMonadsRecursive(const Monad* MonadPtr, const Monad* OriginalMonad, const int depth, const int index, char** outRef) //outref remains the same value through the entire recursion, is that okay?
+void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, int depth, int index, char** outRef) //outref remains the same value through the entire recursion, is that okay?
 {
     char* out = *outRef;
     out = AppendMallocDiscard(out , "[" , DISCARD_FIRST);
@@ -697,7 +697,7 @@ enum interpretStep
     LINK
 };
 
-char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const char* in)
+char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
 {
     char* progress = (char*)in + 1; //adding 1 assuming it's coming right after a '['.
     char* selfID = malloc(1);
@@ -753,7 +753,7 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const cha
                 switch (step)
                 {
                     case ID:
-                        selfID = AppendMallocDiscard(selfID , payload , DISCARD_FIRST);
+                        selfID = AppendMallocDiscard(selfID , payload , DISCARD_FIRST);//TODO decode
                     break;
                     case NAME:
                         strncpy(selectedMonad->name, payload, MAX_MONAD_NAME_SIZE);
@@ -781,7 +781,7 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const cha
                     int index = 0;
                     do //TODO this has to be redone. STARTMONAD ID>JUMP>DIR ID>DIR ID...
                     {
-                        char* left = GenerateIDMalloc(index);
+                        char* left = GenerateIDMalloc(index);//TODO decode
                         if (!strcmp(left , payload))
                         {
                             Monad* iterator2 = firstNewMonad;
@@ -789,7 +789,7 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const cha
                             do
                             {
                                 char* right = GenerateIDMalloc(index2);
-                                if (!strcmp(selfID , payload2) && !strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))
+                                if (strcmp("\0" , payload2) && !strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))//TODO decode
                                 {
                                     free(right);
                                     break;
@@ -855,7 +855,7 @@ char* InterpretAddMonadsAndLinksRecursive(const Monad* selectedMonad , const cha
     return progress;
 }
 
-char* InterpretInterLinksRecursive(const Monad* selectedMonad , const Monad* OriginalMonad , const char* in)
+char* InterpretInterLinksRecursive(Monad* selectedMonad , Monad* OriginalMonad , const char* in)
 {
     char* progress = (char*)in + 1; //adding 1 assuming it's coming right after a '['.
     char* selfID = malloc(1);
@@ -908,7 +908,7 @@ char* InterpretInterLinksRecursive(const Monad* selectedMonad , const Monad* Ori
                 switch (step)
                 {
                     case ID:
-                        selfID = AppendMallocDiscard(selfID , payload , DISCARD_FIRST);
+                        selfID = AppendMallocDiscard(selfID , payload , DISCARD_FIRST);//TODO decode
                     break;
                     case NAME:
                         strncpy(selectedMonad->name, payload, MAX_MONAD_NAME_SIZE);
@@ -937,14 +937,14 @@ char* InterpretInterLinksRecursive(const Monad* selectedMonad , const Monad* Ori
                     do
                     {
                         char* left = GenerateIDMalloc(index);
-                        if (!strcmp(left , payload))
+                        if (!strcmp(left , payload))//TODO decode
                         {
                             Monad* iterator2 = firstNewMonad;
                             int index2 = 0;
                             do
                             {
                                 char* right = GenerateIDMalloc(index2);
-                                if (!strcmp(selfID , payload2) && !strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))
+                                if (strcmp("\0" , payload2) && !strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))//TODO decode
                                 {
                                     free(right);
                                     break;
@@ -1018,8 +1018,8 @@ int main(void)
 {
     // Initialization
     //--------------------------------------------------------------------------------------
-    const int screenWidth = 800;
-    const int screenHeight = 800;
+    int screenWidth = 800;
+    int screenHeight = 800;
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(screenWidth, screenHeight, "Monad");
     SetTargetFPS(60);
@@ -1178,7 +1178,7 @@ int main(void)
                         if (key >= KEY_ZERO && key <= KEY_NINE) 
                         {
                             if (shift) {
-                                const char shifted[] = {')', '!', '@', '#', '$', '%', '^', '&', '*', '('};
+                                char shifted[] = {')', '!', '@', '#', '$', '%', '^', '&', '*', '('};
                                 key = shifted[key - KEY_ZERO];
                             } else {
                                 key = '0' + (key - KEY_ZERO);
