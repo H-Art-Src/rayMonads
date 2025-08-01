@@ -668,7 +668,7 @@ void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, int depth, int 
                 Monad* matchingIterator = rootMonadPtr;
                 do
                 {
-                    if (matchingIterator == depthResult.sharedDepth ? iterator->endMonad : iterator->startMonad)
+                    if (matchingIterator == (depthResult.sharedDepth ? iterator->endMonad : iterator->startMonad))
                     {
                         out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex) , DISCARD_BOTH);// start monad index
                         out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
