@@ -853,20 +853,6 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
     return progress;
 }
 
-// #define SPIRALDOWN {
-//     findEnderIterator = findEnderIterator->rootSubMonads;
-//     Monad* rootEnderIterator = findEnderIterator;
-//     int endIndex = 0;
-//     do
-//     {
-//         if (!strcmp(GenerateIDMalloc(endIndex) , payload))
-//         {
-//             break;
-//         }
-//         findEnderIterator = findEnderIterator->next;
-//         endIndex++;
-//     } while (findEnderIterator != rootEnderIterator);
-// }
 typedef struct ParentedMonad
 {
     struct Monad* monad;
