@@ -847,7 +847,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
         }
         progress++;
     }
-    free(ID);
+    free(selfID);
     free(payload);
     free(payload2);
     free(payload3);
