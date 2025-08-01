@@ -853,6 +853,20 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
     return progress;
 }
 
+// #define SPIRALDOWN {
+//     findEnderIterator = findEnderIterator->rootSubMonads;
+//     Monad* rootEnderIterator = findEnderIterator;
+//     int endIndex = 0;
+//     do
+//     {
+//         if (!strcmp(GenerateIDMalloc(endIndex) , payload))
+//         {
+//             break;
+//         }
+//         findEnderIterator = findEnderIterator->next;
+//         endIndex++;
+//     } while (findEnderIterator != rootEnderIterator);
+// }
 typedef struct ParentedMonad
 {
     struct Monad* monad;
@@ -863,6 +877,8 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentIn
     char* progress = (char*)in + 1; //adding 1 assuming it's coming right after a '['.
     char* payload = malloc(1);
     Monad* rootMonadPtr = selectedMonad->rootSubMonads;
+    Monad* findStartIterator = NULL;
+    Monad* findEnderIterator = NULL;
     payload[0] = '\0';
     char payloadIndex = 0;
     char step = ID;
@@ -872,6 +888,7 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentIn
         Monad* iterator = rootMonadPtr;
         do
         {
+            iterator = iterator->next;
             subCount++;
         } while (iterator != rootMonadPtr);
     }
@@ -908,6 +925,22 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentIn
                 step++;
             break;
             case ';':
+                if (payloadIndex >= 3) //skips intralinks
+                {
+                    findEnderIterator = findEnderIterator->rootSubMonads;
+                    Monad* rootEnderIterator = findEnderIterator;
+                    int endIndex = 0;
+                    do
+                    {
+                        if (!strcmp(GenerateIDMalloc(endIndex) , payload))
+                        {
+                            break;
+                        }
+                        findEnderIterator = findEnderIterator->next;
+                        endIndex++;
+                    } while (findEnderIterator != rootEnderIterator);
+                    AddLink(findStartIterator , findEnderIterator , selectedMonad);
+                }
                 free(payload);
                 payload = malloc(1);
                 payload[0] = '\0';
@@ -917,12 +950,45 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentIn
                 switch (payloadIndex)
                 {
                     case 0:
+                        findStartIterator = rootMonadPtr;
+                        int startIndex = 0;
+                        do
+                        {
+                            if (!strcmp(GenerateIDMalloc(startIndex) , payload))
+                            {
+                                break;
+                            }
+                            findStartIterator = findStartIterator->next;
+                            startIndex++;
+                        } while (findStartIterator != rootMonadPtr);
                         payloadIndex++;
                     break;
-                    case 1:
+                    case 1://jump
+                        ParentedMonad* currentChain = &parentInfo;
+                        int jumpIndex = -1;
+                        do 
+                        {
+                            findEnderIterator = currentChain->monad;
+                            currentChain = currentChain->parentChain;
+                            jumpIndex++;
+                        } while (strcmp(GenerateIDMalloc(jumpIndex) , payload) && currentChain);
                         payloadIndex++;
                     break;
                     case 2:
+                        payloadIndex++; //no break, this is done to skip INTRAlinks already handled in the previous interpreter.
+                    case 3:
+                        findEnderIterator = findEnderIterator->rootSubMonads;
+                        Monad* rootEnderIterator = findEnderIterator;
+                        int endIndex = 0;
+                        do
+                        {
+                            if (!strcmp(GenerateIDMalloc(endIndex) , payload))
+                            {
+                                break;
+                            }
+                            findEnderIterator = findEnderIterator->next;
+                            endIndex++;
+                        } while (findEnderIterator != rootEnderIterator);
                 }
             break;
             default:
