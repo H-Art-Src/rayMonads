@@ -700,7 +700,6 @@ enum interpretStep
 char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
 {
     char* progress = (char*)in + 1; //adding 1 assuming it's coming right after a '['.
-    char* selfID = malloc(1);
     char* payload = malloc(1);
     char* payload2 = malloc(1);
     char* payload3 = malloc(1);
@@ -708,7 +707,6 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
     Monad* newMonadPtr = NULL;
     Monad* firstNewMonad = NULL;
     Monad* lastNewMonad = NULL;
-    selfID[0] = '\0';
     payload[0] = '\0';
     payload2[0] = '\0';
     payload3[0] = '\0';
@@ -744,7 +742,6 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 subCount++;
             break;
             case ']':
-                free(selfID);
                 free(payload);
                 free(payload2);
                 free(payload3);
@@ -753,7 +750,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 switch (step)
                 {
                     case ID:
-                        selfID = AppendMallocDiscard(selfID , payload , DISCARD_FIRST);
+                        printf("%i-", *payload);
                     break;
                     case NAME:
                         strncpy(selectedMonad->name, payload, MAX_MONAD_NAME_SIZE);
@@ -847,7 +844,6 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
         }
         progress++;
     }
-    free(selfID);
     free(payload);
     free(payload2);
     free(payload3);
