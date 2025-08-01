@@ -941,6 +941,7 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentIn
                     } while (findEnderIterator != rootEnderIterator);
                     AddLink(findStartIterator , findEnderIterator , selectedMonad);
                 }
+                printf("Interlink %p -> %p : %p\n" , findStartIterator , findEnderIterator , selectedMonad);
                 free(payload);
                 payload = malloc(1);
                 payload[0] = '\0';
@@ -990,6 +991,9 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentIn
                             endIndex++;
                         } while (findEnderIterator != rootEnderIterator);
                 }
+                free(payload);
+                payload = malloc(1);
+                payload[0] = '\0';
             break;
             default:
                 if(step == LINK)
