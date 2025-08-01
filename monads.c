@@ -389,7 +389,9 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, int functionDepth, int select
                     break;
                 }
                 else
+                {
                     DrawLineV(MonadPtr->avgCenter, iterator->avgCenter, RED); // something went wrong if still shows.
+                }
                 iterator = next;
                 continue;
             }
@@ -626,7 +628,7 @@ char* ChainCarrotAfterJumpStringRecursiveMalloc(Monad* sharedMonad , Monad* endM
     return ret;
 }
 
-void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, int depth, int index, char** outRef) //outref remains the same value through the entire recursion, is that okay?
+void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, int depth, int index, char** outRef)
 {
     char* out = *outRef;
     out = AppendMallocDiscard(out , "[" , DISCARD_FIRST);
