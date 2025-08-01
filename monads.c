@@ -722,6 +722,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
             subCount++;
         } while (iterator != rootMonadPtr);
     }
+    printf("[");
     while (*progress != '\0')
     {
         switch(*progress)
@@ -742,6 +743,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 subCount++;
             break;
             case ']':
+                printf("]");
                 free(payload);
                 free(payload2);
                 free(payload3);
@@ -750,7 +752,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 switch (step)
                 {
                     case ID:
-                        printf("%i-", *payload);
+                        printf("%i", *payload);
                     break;
                     case NAME:
                         strncpy(selectedMonad->name, payload, MAX_MONAD_NAME_SIZE);
