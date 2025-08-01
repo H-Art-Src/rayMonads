@@ -753,7 +753,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 switch (step)
                 {
                     case ID:
-                        selfID = AppendMallocDiscard(selfID , payload , DISCARD_FIRST);//TODO decode
+                        selfID = AppendMallocDiscard(selfID , payload , DISCARD_FIRST);
                     break;
                     case NAME:
                         strncpy(selectedMonad->name, payload, MAX_MONAD_NAME_SIZE);
@@ -781,7 +781,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                     int index = 0;
                     do //TODO this has to be redone. STARTMONAD ID>JUMP>DIR ID>DIR ID...
                     {
-                        char* left = GenerateIDMalloc(index);//TODO decode
+                        char* left = GenerateIDMalloc(index);
                         if (!strcmp(left , payload))
                         {
                             Monad* iterator2 = firstNewMonad;
@@ -789,7 +789,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                             do
                             {
                                 char* right = GenerateIDMalloc(index2);
-                                if (strcmp("\0" , payload2) && !strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))//TODO decode
+                                if (strcmp("\0" , payload2) && !strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))
                                 {
                                     free(right);
                                     break;
@@ -914,7 +914,7 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , Monad* OriginalMonad ,
                 switch (step)
                 {
                     case ID:
-                        selfID = AppendMallocDiscard(selfID , payload , DISCARD_FIRST);//TODO decode
+                        selfID = AppendMallocDiscard(selfID , payload , DISCARD_FIRST);
                     break;
                     case SUB:
                         lastNewMonad = newMonadPtr;
@@ -940,14 +940,14 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , Monad* OriginalMonad ,
                     // do
                     // {
                     //     char* left = GenerateIDMalloc(index);
-                    //     if (!strcmp(left , payload))//TODO decode
+                    //     if (!strcmp(left , payload))
                     //     {
                     //         Monad* iterator2 = firstNewMonad;
                     //         int index2 = 0;
                     //         do
                     //         {
                     //             char* right = GenerateIDMalloc(index2);
-                    //             if (strcmp("\0" , payload2) && !strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))//TODO decode
+                    //             if (strcmp("\0" , payload2) && !strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))
                     //             {
                     //                 free(right);
                     //                 break;
