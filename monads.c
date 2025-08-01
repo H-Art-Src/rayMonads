@@ -896,7 +896,6 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentIn
                         iterator = iterator->prev; // going backwards as to only count new monads.
                     } while (iterator != rootMonadPtr);
                 }
-                subCount++;
             break;
             case ']':
                 free(payload);
