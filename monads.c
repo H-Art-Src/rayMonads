@@ -853,7 +853,12 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
     return progress;
 }
 
-char* InterpretInterLinksRecursive(Monad* selectedMonad , Monad* OriginalMonad , const char* in)
+typedef struct ParentedMonad
+{
+    struct Monad* monad;
+    struct ParentedMonad* parentChain;
+} ParentedMonad;
+char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentInfo , const char* in)
 {
     char* progress = (char*)in + 1; //adding 1 assuming it's coming right after a '['.
     char* selfID = malloc(1);
@@ -861,10 +866,6 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , Monad* OriginalMonad ,
     char* payload2 = malloc(1);
     char* payload3 = malloc(1);
     Monad* rootMonadPtr = selectedMonad->rootSubMonads;
-    Monad* newMonadPtr = NULL;
-    Monad* firstNewMonad = NULL;
-    Monad* lastNewMonad = NULL;
-    selfID[0] = '\0';
     payload[0] = '\0';
     payload2[0] = '\0';
     payload3[0] = '\0';
@@ -893,7 +894,7 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , Monad* OriginalMonad ,
                     {
                         if (index == subMonadStep)
                         {
-                            progress = InterpretInterLinksRecursive(iterator , OriginalMonad , progress);
+                            progress = InterpretInterLinksRecursive(iterator , (ParentedMonad){selectedMonad , &parentInfo} , progress);
                             subMonadStep--;
                         }
                         index--;
@@ -909,14 +910,6 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , Monad* OriginalMonad ,
                 free(payload3);
                 return progress;
             case ':':
-                switch (step)
-                {
-                    case ID:
-                        selfID = AppendMallocDiscard(selfID , payload , DISCARD_FIRST);
-                    break;
-                    case SUB:
-                        lastNewMonad = newMonadPtr;
-                }
                 free(payload);
                 free(payload2);
                 free(payload3);
@@ -930,38 +923,35 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , Monad* OriginalMonad ,
                 step++;
             break;
             case ';':
-                if (firstNewMonad && lastNewMonad)
-                {
-                    // Monad* iterator = firstNewMonad;
-                    // Monad* stopMonad = lastNewMonad->next;
-                    // int index = 0;
-                    // do
-                    // {
-                    //     char* left = GenerateIDMalloc(index);
-                    //     if (!strcmp(left , payload))
-                    //     {
-                    //         Monad* iterator2 = firstNewMonad;
-                    //         int index2 = 0;
-                    //         do
-                    //         {
-                    //             char* right = GenerateIDMalloc(index2);
-                    //             if (strcmp("\0" , payload2) && !strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))
-                    //             {
-                    //                 free(right);
-                    //                 break;
-                    //             }
-                    //             free(right);
-                    //             index2++;
-                    //             iterator2 = iterator2->next;
-                    //         } while (iterator2 != stopMonad);
-                    //         free(left);
-                    //         break;
-                    //     }
-                    //     free(left);
-                    //     index++;
-                    //     iterator = iterator->next;
-                    // } while (iterator != stopMonad);
-                }
+                // Monad* iterator = firstNewMonad;
+                // Monad* stopMonad = lastNewMonad->next;
+                // int index = 0;
+                // do
+                // {
+                //     char* left = GenerateIDMalloc(index);
+                //     if (!strcmp(left , payload))
+                //     {
+                //         Monad* iterator2 = firstNewMonad;
+                //         int index2 = 0;
+                //         do
+                //         {
+                //             char* right = GenerateIDMalloc(index2);
+                //             if (strcmp("\0" , payload2) && !strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))
+                //             {
+                //                 free(right);
+                //                 break;
+                //             }
+                //             free(right);
+                //             index2++;
+                //             iterator2 = iterator2->next;
+                //         } while (iterator2 != stopMonad);
+                //         free(left);
+                //         break;
+                //     }
+                //     free(left);
+                //     index++;
+                //     iterator = iterator->next;
+                // } while (iterator != stopMonad);
                 free(payload);
                 free(payload2);
                 free(payload3);
@@ -974,29 +964,30 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , Monad* OriginalMonad ,
                 payloadIndex = 0;
             break;
             case '>':
-                if(payloadIndex >= 2)
-                {
-                    payloadIndex = 0;
-                    //this isn't right. This should be used after doing first id and jump. TODO
-                    //activate the jump. The first part of the link is ignored, since it's also storede in the final.
-                }
-                else
+                if (payloadIndex < 2)
                 {
                     payloadIndex++;
                 }
+                else
+                {
+
+                }
             break;
             default:
-                char addChar[2] = {*progress , '\0'};
-                switch (payloadIndex)
+                if (step == LINK)
                 {
-                    case 0:
-                        payload = AppendMallocDiscard(payload , addChar , DISCARD_FIRST);
-                    break;
-                    case 1:
-                        payload2 = AppendMallocDiscard(payload2 , addChar , DISCARD_FIRST);
-                    break;
-                    case 2:
-                        payload3 = AppendMallocDiscard(payload3 , addChar , DISCARD_FIRST);
+                    char addChar[2] = {*progress , '\0'};
+                    switch (payloadIndex)
+                    {
+                        case 0:
+                            payload = AppendMallocDiscard(payload , addChar , DISCARD_FIRST);
+                        break;
+                        case 1:
+                            payload2 = AppendMallocDiscard(payload2 , addChar , DISCARD_FIRST);
+                        break;
+                        case 2:
+                            payload3 = AppendMallocDiscard(payload3 , addChar , DISCARD_FIRST);
+                    }
                 }
         }
         progress++;
@@ -1139,7 +1130,7 @@ int main(void)
                     DrawText("PASTING", GetScreenHeight()/2 - 100, GetScreenWidth()/2 - 100, 48, ORANGE);
                     EndDrawing();
                     InterpretAddMonadsAndLinksRecursive(selectedMonad , GetClipboardText());
-                    InterpretInterLinksRecursive(selectedMonad , selectedMonad , GetClipboardText());
+                    InterpretInterLinksRecursive(selectedMonad , (ParentedMonad){NULL , NULL} , GetClipboardText());
                     strcpy(monadLog, "Pasted text data in [");
                     strcat(monadLog, selectedMonad->name);
                     strcat(monadLog, "] from clipboard.");   
