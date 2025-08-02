@@ -628,7 +628,7 @@ char* ChainCarrotAfterJumpStringRecursiveMalloc(Monad* sharedMonad , Monad* endM
     return ret;
 }
 
-void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, char** outRef)
+void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, int index, char** outRef)
 {
     char* out = *outRef;
     out = AppendMallocDiscard(out , "[" , DISCARD_FIRST);
@@ -646,7 +646,7 @@ void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, char** outRef)
         Monad* iterator = rootMonadPtr;
         do
         {
-            PrintMonadsRecursive(iterator , OriginalMonad , depth + 1 , subIndex , outRef);
+            PrintMonadsRecursive(iterator , OriginalMonad , subIndex , outRef);
             iterator = iterator->next;
             subIndex++;
         } while (iterator != rootMonadPtr);
@@ -1110,7 +1110,7 @@ int main(void)
                     EndDrawing();
                     char* out = malloc(1);
                     out[0] = '\0';
-                    PrintMonadsRecursive(selectedMonad , selectedMonad , &out);
+                    PrintMonadsRecursive(selectedMonad , selectedMonad , 0 , &out);
                     printf("%s\n" , out);
                     SetClipboardText(out);
                     free(out);
