@@ -872,7 +872,7 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentIn
     payload[0] = '\0';
     char payloadIndex = 0;
     char step = ID;
-    int subMonadStep = - 1;
+    int subMonadStep = -1;
     if (rootMonadPtr)
     {
         Monad* iterator = rootMonadPtr;
@@ -890,7 +890,7 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentIn
             case '[':
                 if (rootMonadPtr && step == SUB)
                 {
-                    progress = InterpretInterLinksRecursive(rootMonadPtr , (ParentedMonad){selectedMonad , &parentInfo , subMonadStep} , progress);
+                    progress = InterpretInterLinksRecursive(rootMonadPtr->prev , (ParentedMonad){selectedMonad , &parentInfo , subMonadStep} , progress);
                 }
             break;
             case ']':
@@ -901,6 +901,7 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentIn
                 {
                     while (parentInfo.subMonadStepContext && !strcmp(payload , GenerateIDMalloc(parentInfo.subMonadStepContext)))
                     {
+                        //TODO only go to prev if a monad of id parentInfo.subMonadStepContext could exist.
                         selectedMonad = selectedMonad->prev;
                         parentInfo.subMonadStepContext--;
                     }
