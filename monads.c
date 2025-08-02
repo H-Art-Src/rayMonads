@@ -860,6 +860,7 @@ typedef struct ParentedMonad
 {
     struct Monad* monad;
     struct ParentedMonad* parentChain;
+    int subMonadStepContext;
 } ParentedMonad;
 char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentInfo , const char* in)
 {
@@ -871,42 +872,39 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentIn
     payload[0] = '\0';
     char payloadIndex = 0;
     char step = ID;
-    int subCount = 0;
+    int subMonadStep = - 1;
     if (rootMonadPtr)
     {
         Monad* iterator = rootMonadPtr;
         do
         {
             iterator = iterator->next;
-            subCount++;
+            subMonadStep++;
         } while (iterator != rootMonadPtr);
     }
-    int subMonadStep = subCount;
     while (*progress != '\0')
     {
+        printf("%c",*progress);
         switch(*progress)
         {
             case '[':
-                if (rootMonadPtr)
+                if (rootMonadPtr && step == SUB)
                 {
-                    int index = subCount;
-                    Monad* iterator = rootMonadPtr->prev;
-                    do
-                    {
-                        if (index == subMonadStep)
-                        {
-                            progress = InterpretInterLinksRecursive(iterator , (ParentedMonad){selectedMonad , &parentInfo} , progress);
-                            subMonadStep--;
-                        }
-                        index--;
-                        iterator = iterator->prev; // going backwards as to only count new monads.
-                    } while (iterator != rootMonadPtr);
+                    progress = InterpretInterLinksRecursive(rootMonadPtr , (ParentedMonad){selectedMonad , &parentInfo , subMonadStep} , progress);
                 }
             break;
             case ']':
                 free(payload);
                 return progress;
             case ':':
+                if (step == ID) //TODO change selectedMonad (itself!) based on parent's subrootmonad as a reference and found id.
+                {
+                    while (parentInfo.subMonadStepContext && !strcmp(payload , GenerateIDMalloc(parentInfo.subMonadStepContext)))
+                    {
+                        selectedMonad = selectedMonad->prev;
+                        parentInfo.subMonadStepContext--;
+                    }
+                }
                 free(payload);
                 payload = malloc(1);
                 payload[0] = '\0';
@@ -1131,7 +1129,8 @@ int main(void)
                     DrawText("PASTING", GetScreenHeight()/2 - 100, GetScreenWidth()/2 - 100, 48, ORANGE);
                     EndDrawing();
                     InterpretAddMonadsAndLinksRecursive(selectedMonad , GetClipboardText());
-                    //InterpretInterLinksRecursive(selectedMonad , (ParentedMonad){NULL , NULL} , GetClipboardText());
+                    printf("\n");
+                    InterpretInterLinksRecursive(selectedMonad , (ParentedMonad){NULL , NULL} , GetClipboardText());
                     strcpy(monadLog, "Pasted text data in [");
                     strcat(monadLog, selectedMonad->name);
                     strcat(monadLog, "] from clipboard.");   
