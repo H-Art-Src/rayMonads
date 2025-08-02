@@ -628,7 +628,7 @@ char* ChainCarrotAfterJumpStringRecursiveMalloc(Monad* sharedMonad , Monad* endM
     return ret;
 }
 
-void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, int depth, char** outRef)
+void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, char** outRef)
 {
     char* out = *outRef;
     Monad* rootMonadPtr = MonadPtr->rootSubMonads;   
@@ -656,7 +656,7 @@ void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, int depth, char
         Monad* iterator = rootMonadPtr;
         do
         {
-            PrintMonadsRecursive(iterator , OriginalMonad , depth + 1 , outRef);
+            PrintMonadsRecursive(iterator , OriginalMonad , outRef);
             iterator = iterator->next;
         } while (iterator != rootMonadPtr);
         out = *outRef; // Old reference is most certainly freed in recursive calls. Update.
@@ -1120,7 +1120,7 @@ int main(void)
                     EndDrawing();
                     char* out = malloc(1);
                     out[0] = '\0';
-                    PrintMonadsRecursive(selectedMonad , selectedMonad , 0 , &out);
+                    PrintMonadsRecursive(selectedMonad , selectedMonad , &out);
                     printf("%s\n" , out);
                     SetClipboardText(out);
                     free(out);
