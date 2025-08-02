@@ -631,33 +631,24 @@ char* ChainCarrotAfterJumpStringRecursiveMalloc(Monad* sharedMonad , Monad* endM
 void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, char** outRef)
 {
     char* out = *outRef;
-    Monad* rootMonadPtr = MonadPtr->rootSubMonads;   
     out = AppendMallocDiscard(out , "[" , DISCARD_FIRST);
-    int subCount = 0;
-    if (rootMonadPtr)
-    {
-        Monad* iterator = rootMonadPtr;
-        do
-        {
-            iterator = iterator->next;
-            subCount++;
-        } while (iterator != rootMonadPtr);
-        out = *outRef; // Old reference is most certainly freed in recursive calls. Update.
-    }
-    out = AppendMallocDiscard(out , GenerateIDMalloc(subCount) , DISCARD_BOTH);
+    out = AppendMallocDiscard(out , GenerateIDMalloc(index) , DISCARD_BOTH);
     out = AppendMallocDiscard(out , ":" , DISCARD_FIRST);
     out = AppendMallocDiscard(out , PruneForbiddenCharactersMalloc(MonadPtr->name) , DISCARD_BOTH);
     out = AppendMallocDiscard(out , ":" , DISCARD_FIRST);
 
     *outRef = out; //reset this before the iteration.
     //iterate through the objects with this object treated as a category.
+    Monad* rootMonadPtr = MonadPtr->rootSubMonads;
     if (rootMonadPtr)
     {
+        int subIndex = 0;
         Monad* iterator = rootMonadPtr;
         do
         {
-            PrintMonadsRecursive(iterator , OriginalMonad , outRef);
+            PrintMonadsRecursive(iterator , OriginalMonad , depth + 1 , subIndex , outRef);
             iterator = iterator->next;
+            subIndex++;
         } while (iterator != rootMonadPtr);
         out = *outRef; // Old reference is most certainly freed in recursive calls. Update.
     }
@@ -903,7 +894,6 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentIn
             case ':':
                 if (step == ID) //TODO change selectedMonad (itself!) based on parent's subrootmonad as a reference and found id.
                 {
-                    //TODO decrement parentInfo.subMonadStepContext in a loop until a monad with that id could exist.
                     while (parentInfo.subMonadStepContext && !strcmp(payload , GenerateIDMalloc(parentInfo.subMonadStepContext)))
                     {
                         selectedMonad = selectedMonad->prev;
