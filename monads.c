@@ -663,19 +663,21 @@ void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, int depth, int 
         do
         {
             DepthResult depthResult = FindDepthOfObject(OriginalMonad , iterator->startMonad , iterator->endMonad , 0);
-            printf("DR container:%p cousin:%p shared:%p depth: %i jump: %i\n", depthResult.containerMonad , depthResult.cousinMonad , depthResult.sharedMonad , depthResult.depth , depthResult.sharedDepth);
             if (depthResult.sharedMonad)
             {
+                printf("DR container:%p cousin:%p shared:%p depth: %i shared depth: %i\n", depthResult.containerMonad , depthResult.cousinMonad , depthResult.sharedMonad , depthResult.depth , depthResult.sharedDepth);    
+                printf("%p->%p\n" , iterator->startMonad , iterator->endMonad);
+                int jumpBy = depthResult.depth - depthResult.sharedDepth - 1;
                 int subIndex = 0;
                 Monad* matchingIterator = rootMonadPtr;
                 do
                 {
-                    if (matchingIterator == (depthResult.sharedDepth ? iterator->endMonad : iterator->startMonad))
+                    if (matchingIterator == (jumpBy ? iterator->endMonad : iterator->startMonad))
                     {
                         out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex) , DISCARD_BOTH);// start monad index
                         out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
-                        out = AppendMallocDiscard(out , GenerateIDMalloc(depthResult.sharedDepth) , DISCARD_BOTH); //Must "jump up" by this amount.
-                        out = AppendMallocDiscard(out , ChainCarrotAfterJumpStringRecursiveMalloc(depthResult.sharedMonad , depthResult.sharedDepth ? iterator->startMonad : iterator->endMonad), DISCARD_BOTH);
+                        out = AppendMallocDiscard(out , GenerateIDMalloc(jumpBy) , DISCARD_BOTH); //Must "jump up" by this amount.
+                        out = AppendMallocDiscard(out , ChainCarrotAfterJumpStringRecursiveMalloc(depthResult.sharedMonad , jumpBy ? iterator->startMonad : iterator->endMonad), DISCARD_BOTH);
                         out = AppendMallocDiscard(out , ";" , DISCARD_FIRST);
                         break;
                     }
@@ -686,7 +688,6 @@ void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, int depth, int 
             iterator = iterator->next;
         } while (iterator != rootLinkPtr);
     }
-
     out = AppendMallocDiscard(out , "]" , DISCARD_FIRST);
     *outRef = out;
 }
@@ -790,7 +791,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                             do
                             {
                                 char* right = GenerateIDMalloc(index2);
-                                if (strcmp("\0" , payload2) && !strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))
+                                if (!strcmp(right , payload3) && AddLink(iterator , iterator2 , selectedMonad))
                                 {
                                     free(right);
                                     break;
@@ -1130,7 +1131,7 @@ int main(void)
                     DrawText("PASTING", GetScreenHeight()/2 - 100, GetScreenWidth()/2 - 100, 48, ORANGE);
                     EndDrawing();
                     InterpretAddMonadsAndLinksRecursive(selectedMonad , GetClipboardText());
-                    InterpretInterLinksRecursive(selectedMonad , (ParentedMonad){NULL , NULL} , GetClipboardText());
+                    //InterpretInterLinksRecursive(selectedMonad , (ParentedMonad){NULL , NULL} , GetClipboardText());
                     strcpy(monadLog, "Pasted text data in [");
                     strcat(monadLog, selectedMonad->name);
                     strcat(monadLog, "] from clipboard.");   
@@ -1293,9 +1294,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-
     RemoveSubMonadsRecursive(GodMonad); // Free every object and link from memory.
-
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 
