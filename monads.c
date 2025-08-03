@@ -763,7 +763,6 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentIn
     char step = NAME;
     while (*progress != '\0')
     {
-        printf("%c",*progress);
         switch(*progress)
         {
             case '[':
@@ -983,7 +982,6 @@ int main(void)
                     char* out = malloc(1);
                     out[0] = '\0';
                     PrintMonadsRecursive(selectedMonad , selectedMonad , &out);
-                    printf("%s\n" , out);
                     SetClipboardText(out);
                     free(out);
                     strcpy(monadLog, "Copied text data from [");
