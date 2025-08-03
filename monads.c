@@ -95,7 +95,7 @@ typedef struct ActiveResult
     int resultKey, resultDepth;
 } ActiveResult;
 
-#define SCREENMARGIN 50
+#define SCREENMARGIN 20
 
 bool IsVector2OnScreen(Vector2 pos)
 {
@@ -994,8 +994,13 @@ int main(void)
                     BeginDrawing();
                     DrawText("PASTING", GetScreenHeight()/2 - 100, GetScreenWidth()/2 - 100, 48, ORANGE);
                     EndDrawing();
+                    Monad* oldRoot = selectedMonad->rootSubMonads;
+                    selectedMonad->rootSubMonads = NULL;
                     InterpretAddMonadsRecursive(selectedMonad , GetClipboardText());
                     InterpretLinksRecursive(selectedMonad , (ParentedMonad){NULL , NULL} , GetClipboardText());
+                    selectedMonad->rootSubMonads->prev->next = oldRoot;
+                    oldRoot->next = selectedMonad->rootSubMonads;
+                    selectedMonad->rootSubMonads = oldRoot;
                     strcpy(monadLog, "Pasted text data in [");
                     strcat(monadLog, selectedMonad->name);
                     strcat(monadLog, "] from clipboard.");   
