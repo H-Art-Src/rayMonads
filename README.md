@@ -17,5 +17,5 @@ The following commands need a control key held down to function:
 If you are selecting a link it will delete that instead of an object.\
 -Key 'T' will rename the selected object to your clipboard contents.
 -Key 'C' will copy the selected monad's text data recursively to your clipboard.
--Key 'V' will paste the text data recursively to the selected monad, renaming it in the process.
+-Key 'V' will paste the text data recursively as a new object contained by the selected object.
 Note that only links to objects of the same parent can be copy and pasted.
