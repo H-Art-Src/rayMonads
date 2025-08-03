@@ -855,51 +855,34 @@ typedef struct ParentedMonad
 {
     struct Monad* monad;
     struct ParentedMonad* parentChain;
-    int subMonadStepContext;
 } ParentedMonad;
 char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentInfo , const char* in)
 {
     char* progress = (char*)in + 1; //adding 1 assuming it's coming right after a '['.
     char* payload = malloc(1);
     Monad* rootMonadPtr = selectedMonad->rootSubMonads;
+    Monad* subIterator = rootMonadPtr;
     Monad* findStartIterator = NULL;
     Monad* findEnderIterator = NULL;
     payload[0] = '\0';
     char payloadIndex = 0;
     char step = ID;
-    int subMonadStep = -1;
-    if (rootMonadPtr)
-    {
-        Monad* iterator = rootMonadPtr;
-        do
-        {
-            iterator = iterator->next;
-            subMonadStep++;
-        } while (iterator != rootMonadPtr);
-    }
     while (*progress != '\0')
     {
         printf("%c",*progress);
         switch(*progress)
         {
             case '[':
-                if (rootMonadPtr && step == SUB)
-                {
-                    progress = InterpretInterLinksRecursive(rootMonadPtr->prev , (ParentedMonad){selectedMonad , &parentInfo , subMonadStep} , progress);
-                }
+            if (subIterator)
+            {
+                progress = InterpretInterLinksRecursive(subIterator , (ParentedMonad){selectedMonad , &parentInfo} , progress);
+                subIterator = subIterator->next;
+            }
             break;
             case ']':
                 free(payload);
                 return progress;
             case ':':
-                if (step == ID) //TODO change selectedMonad (itself!) based on parent's subrootmonad as a reference and found id.
-                {
-                    while (parentInfo.subMonadStepContext && !strcmp(payload , GenerateIDMalloc(parentInfo.subMonadStepContext)))
-                    {
-                        selectedMonad = selectedMonad->prev;
-                        parentInfo.subMonadStepContext--;
-                    }
-                }
                 free(payload);
                 payload = malloc(1);
                 payload[0] = '\0';
@@ -923,7 +906,6 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentIn
                     } while (findEnderIterator != rootEnderIterator);
                     AddLink(findStartIterator , findEnderIterator , selectedMonad);
                 }
-                printf("Interlink %p -> %p : %p\n" , findStartIterator , findEnderIterator , selectedMonad);
                 free(payload);
                 payload = malloc(1);
                 payload[0] = '\0';
@@ -947,14 +929,15 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentIn
                         payloadIndex++;
                     break;
                     case 1://jump
+                        findEnderIterator = selectedMonad;
                         ParentedMonad* currentChain = &parentInfo;
-                        int jumpIndex = -1;
-                        do 
+                        int jumpIndex = 0;
+                        while (currentChain && strcmp(GenerateIDMalloc(jumpIndex) , payload)) 
                         {
                             findEnderIterator = currentChain->monad;
                             currentChain = currentChain->parentChain;
                             jumpIndex++;
-                        } while (strcmp(GenerateIDMalloc(jumpIndex) , payload) && currentChain);
+                        }
                         payloadIndex++;
                     break;
                     case 2:
