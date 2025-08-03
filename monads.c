@@ -663,10 +663,10 @@ void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, char** outRef)
             DepthResult depthResult = FindDepthOfObject(OriginalMonad , iterator->startMonad , iterator->endMonad , 0);
             if (depthResult.sharedMonad)
             {
-                printf("DR container:%p cousin:%p shared:%p depth: %i shared depth: %i\n", depthResult.containerMonad , depthResult.cousinMonad , depthResult.sharedMonad , depthResult.depth , depthResult.sharedDepth);    
-                printf("%p->%p\n" , iterator->startMonad , iterator->endMonad);
                 int jumpBy = depthResult.depth - depthResult.sharedDepth - 1;
                 int subIndex = 0;
+                printf("DR container:%p cousin:%p shared:%p depth: %i shared depth: %i\n", depthResult.containerMonad , depthResult.cousinMonad , depthResult.sharedMonad , depthResult.depth , depthResult.sharedDepth);    
+                printf("%p->%p needs a jump by: %i\n" , iterator->startMonad , iterator->endMonad , jumpBy);
                 Monad* matchingIterator = rootMonadPtr;
                 do
                 {
@@ -697,7 +697,7 @@ enum interpretStep
     LINK
 };
 
-char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
+char* InterpretAddMonadsRecursive(Monad* selectedMonad , const char* in)
 {
     char* progress = (char*)in + 1; //adding 1 assuming it's coming right after a '['.
     char* payload = malloc(1);
@@ -715,7 +715,7 @@ char* InterpretAddMonadsAndLinksRecursive(Monad* selectedMonad , const char* in)
                 {
                     newV2 = (Vector2){GetScreenWidth() - 70.0f , GetScreenHeight() - 70.0f};
                 }
-                progress = InterpretAddMonadsAndLinksRecursive(AddMonad(newV2 , selectedMonad) , progress);
+                progress = InterpretAddMonadsRecursive(AddMonad(newV2 , selectedMonad) , progress);
                 subCount++;
             break;
             case ']':
@@ -750,7 +750,7 @@ typedef struct ParentedMonad
     struct Monad* monad;
     struct ParentedMonad* parentChain;
 } ParentedMonad;
-char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentInfo , const char* in)
+char* InterpretLinksRecursive(Monad* selectedMonad , ParentedMonad parentInfo , const char* in)
 {
     char* progress = (char*)in + 1; //adding 1 assuming it's coming right after a '['.
     char* payload = malloc(1);
@@ -768,7 +768,7 @@ char* InterpretInterLinksRecursive(Monad* selectedMonad , ParentedMonad parentIn
             case '[':
             if (subIterator)
             {
-                progress = InterpretInterLinksRecursive(subIterator , (ParentedMonad){selectedMonad , &parentInfo} , progress);
+                progress = InterpretLinksRecursive(subIterator , (ParentedMonad){selectedMonad , &parentInfo} , progress);
                 subIterator = subIterator->next;
             }
             break;
@@ -983,6 +983,7 @@ int main(void)
                     out[0] = '\0';
                     PrintMonadsRecursive(selectedMonad , selectedMonad , &out);
                     SetClipboardText(out);
+                    printf("%s\n",out);
                     free(out);
                     strcpy(monadLog, "Copied text data from [");
                     strcat(monadLog, selectedMonad->name);
@@ -993,8 +994,8 @@ int main(void)
                     BeginDrawing();
                     DrawText("PASTING", GetScreenHeight()/2 - 100, GetScreenWidth()/2 - 100, 48, ORANGE);
                     EndDrawing();
-                    InterpretAddMonadsAndLinksRecursive(selectedMonad , GetClipboardText());
-                    InterpretInterLinksRecursive(selectedMonad , (ParentedMonad){NULL , NULL} , GetClipboardText());
+                    InterpretAddMonadsRecursive(selectedMonad , GetClipboardText());
+                    InterpretLinksRecursive(selectedMonad , (ParentedMonad){NULL , NULL} , GetClipboardText());
                     strcpy(monadLog, "Pasted text data in [");
                     strcat(monadLog, selectedMonad->name);
                     strcat(monadLog, "] from clipboard.");   
