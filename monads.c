@@ -492,7 +492,7 @@ char* AppendMallocDiscard(char* str1, char* str2, int discardLevel)
     return new_str;
 }
 
-#define _FORBIDDEN "[]:;>\0\r\n"
+#define _FORBIDDEN "[]:;?>\0\r\n"
 
 char* GenerateIDMalloc(int index) //sub monads limited by the highest int, really high.
 {
@@ -640,13 +640,11 @@ void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, char** outRef)
     Monad* rootMonadPtr = MonadPtr->rootSubMonads;
     if (rootMonadPtr)
     {
-        int subIndex = 0;
         Monad* iterator = rootMonadPtr;
         do
         {
             PrintMonadsRecursive(iterator , OriginalMonad , outRef);
             iterator = iterator->next;
-            subIndex++;
         } while (iterator != rootMonadPtr);
         out = *outRef; // Old reference is most certainly freed in recursive calls. Update.
     }
@@ -677,11 +675,12 @@ void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, char** outRef)
                         out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
                         out = AppendMallocDiscard(out , GenerateIDMalloc(jumpBy) , DISCARD_BOTH); //Must "jump up" by this amount.
                         out = AppendMallocDiscard(out , ChainCarrotAfterJumpStringRecursiveMalloc(depthResult.sharedMonad , startFound ? iterator->endMonad : iterator->startMonad), DISCARD_BOTH); // Make these turns.
-                        out = AppendMallocDiscard(out , ";" , DISCARD_FIRST);
-                        if (!jumpBy)
+                        if (!startFound)
                         {
-                            break;
+                            out = AppendMallocDiscard(out , "?" , DISCARD_FIRST);
                         }
+                        out = AppendMallocDiscard(out , ";" , DISCARD_FIRST);
+                        break;
                     }
                     matchingIterator = matchingIterator->next;
                     subIndex++;
@@ -765,6 +764,7 @@ char* InterpretLinksRecursive(Monad* selectedMonad , ParentedMonad parentInfo , 
     payload[0] = '\0';
     char payloadIndex = 0;
     char step = NAME;
+    bool reverseLink = false;
     while (*progress != '\0')
     {
         switch(*progress)
@@ -786,6 +786,9 @@ char* InterpretLinksRecursive(Monad* selectedMonad , ParentedMonad parentInfo , 
                 payloadIndex = 0;
                 step++;
             break;
+            case '?':
+                reverseLink = true;
+            break;
             case ';':
                 findEnderIterator = findEnderIterator->rootSubMonads;
                 Monad* rootEnderIterator = findEnderIterator;
@@ -799,11 +802,15 @@ char* InterpretLinksRecursive(Monad* selectedMonad , ParentedMonad parentInfo , 
                     findEnderIterator = findEnderIterator->next;
                     endIndex++;
                 } while (findEnderIterator != rootEnderIterator);
-                AddLink(findStartIterator , findEnderIterator , selectedMonad);
+                if (reverseLink)
+                    AddLink(findEnderIterator , findStartIterator , selectedMonad);
+                else
+                    AddLink(findStartIterator , findEnderIterator , selectedMonad);
                 free(payload);
                 payload = malloc(1);
                 payload[0] = '\0';
                 payloadIndex = 0;
+                reverseLink = false;
             break;
             case '>':
                 switch (payloadIndex)
