@@ -671,13 +671,17 @@ void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, char** outRef)
                 do
                 {
                     bool startFound = matchingIterator == iterator->startMonad;
-                    if (startFound || matchingIterator == iterator->endMonad)
+                    if (startFound || (jumpBy && matchingIterator == iterator->endMonad))
                     {
                         out = AppendMallocDiscard(out , GenerateIDMalloc(subIndex) , DISCARD_BOTH); // Start monad index.
                         out = AppendMallocDiscard(out , ">" , DISCARD_FIRST);
                         out = AppendMallocDiscard(out , GenerateIDMalloc(jumpBy) , DISCARD_BOTH); //Must "jump up" by this amount.
                         out = AppendMallocDiscard(out , ChainCarrotAfterJumpStringRecursiveMalloc(depthResult.sharedMonad , startFound ? iterator->endMonad : iterator->startMonad), DISCARD_BOTH); // Make these turns.
                         out = AppendMallocDiscard(out , ";" , DISCARD_FIRST);
+                        if (!jumpBy)
+                        {
+                            break;
+                        }
                     }
                     matchingIterator = matchingIterator->next;
                     subIndex++;
