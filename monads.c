@@ -441,7 +441,6 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, int functionDepth, int select
 
     if (INSCOPE)
     {
-        //DrawCircleLinesV(MonadPtr->avgCenter , MonadPtr->radius , GREEN);
         DrawPoly(MonadPtr->avgCenter, 3, 5.0f, 0, PURPLE);
         DrawText(MonadPtr->name, (int)MonadPtr->avgCenter.x + 10, (int)MonadPtr->avgCenter.y + 10, 24, Fade(PURPLE, 0.5f));
     }
@@ -463,9 +462,9 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, int functionDepth, int select
 
 enum discardAppend
 {
-    DISCARD_NONE,
-    DISCARD_FIRST,// use when str2 is not a malloc'd char array.
-    DISCARD_BOTH
+    DISCARD_NONE, // Neither are malloc'd.
+    DISCARD_FIRST, // Use when str2 is not a malloc'd char array.
+    DISCARD_BOTH // Both are malloc'd.
 };
 
 char* AppendMallocDiscard(char* str1, char* str2, char discardLevel)
@@ -1077,8 +1076,9 @@ int main(void)
         if (selectedMonad)
         {
             int determineMode = selectedMonad->depth - selectedDepth;
-            DrawText((!determineMode) ? "Adding" : (determineMode == 1) ? "Linking" : "Edit Only", 32, 32, 20, SKYBLUE);
+            DrawText((!determineMode) ? "Adding" : (determineMode == 1) ? "Linking" : "Editing Name Only", 32, 32, 20, SKYBLUE);
             DrawPoly(selectedMonad->avgCenter, 3, 10.0f, 0, Fade(RED, 0.5f));
+            DrawText(selectedMonad->name, (int)selectedMonad->avgCenter.x + 10, (int)selectedMonad->avgCenter.y + 10, selectedDepth < selectedMonad->depth ? 16 : 24, Fade(ORANGE, 0.5f));
         }
         else
         {
