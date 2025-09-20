@@ -54,14 +54,14 @@ enum
 
 // 1. A Monad cannot have multiple container Monads.
 // 2. rootSubLink can only have starting Monads that exist within rootSubMonads.
-// 3. Link cannot comprise of Monads of different depths.
-// 4. Only one combination of a link can exist in totality.
+// 3. a Link cannot comprise of Monads of different depths.
+// 4. Only one combination of a Link can exist in totality.
 #define MAX_MONAD_NAME_SIZE 32
 #define MONAD_LINK_MIDDLE_LERP 0.35f
 typedef struct Monad
 {
     char name[MAX_MONAD_NAME_SIZE];
-    Vector2 avgCenter, defaultCenter;
+    Vector2 avgCenter;
     struct Monad* rootSubMonads;
     struct Monad* prev;
     struct Monad* next;
@@ -100,8 +100,7 @@ typedef struct ActiveResult
 
 bool IsVector2OnScreen(Vector2 pos)
 {
-    return pos.x >= SCREENMARGIN && pos.x <= GetScreenWidth() - SCREENMARGIN &&
-           pos.y >= SCREENMARGIN && pos.y <= GetScreenHeight() - SCREENMARGIN;
+    return pos.x >= SCREENMARGIN && pos.x <= GetScreenWidth() - SCREENMARGIN && pos.y >= SCREENMARGIN && pos.y <= GetScreenHeight() - SCREENMARGIN;
 }
 
 // Adds an object (subMonad) to ContainingMonadPtr. ContainingMonadPtr must not be null.
@@ -111,7 +110,6 @@ struct Monad* AddMonad(Vector2 canvasPosition, Monad* containingMonadPtr)
     Monad* newMonadPtr = (Monad*)malloc(sizeof(Monad));
     memset(newMonadPtr, 0, sizeof(Monad));
 
-    newMonadPtr->defaultCenter = canvasPosition;
     newMonadPtr->avgCenter = canvasPosition;
     newMonadPtr->rootSubMonads = NULL;
     newMonadPtr->rootSubLink = NULL;
@@ -238,7 +236,7 @@ struct Link* AddLink(Monad* start, Monad* end, Monad* containingMonadPtr)
 {
     Link* rootPtr = containingMonadPtr->rootSubLink;
 
-    //Return nothing if it already exists
+    //Return existing link if it already exists.
     if (rootPtr) //has entries.
     {
         Link* iterator = rootPtr;
@@ -247,7 +245,7 @@ struct Link* AddLink(Monad* start, Monad* end, Monad* containingMonadPtr)
             if ((iterator->startMonad == start) && (iterator->endMonad == end))
             {
                 printf("Link already exists.\n");
-                return NULL;
+                return iterator;
             }
             iterator = iterator->next;
         } while (iterator != rootPtr);
@@ -928,7 +926,6 @@ int main(void)
 
     GodMonad->avgCenter.x = screenWidth / 2.0f;
     GodMonad->avgCenter.y = screenHeight / 2.0f;
-    GodMonad->defaultCenter = GodMonad->avgCenter;
     GodMonad->prev = GodMonad;
     GodMonad->next = GodMonad;
     strcpy(GodMonad->name, "Monad 0");
@@ -1208,7 +1205,7 @@ int main(void)
     // De-Initialization
     //--------------------------------------------------------------------------------------
     RemoveSubMonadsRecursive(GodMonad); // Free every object and link from memory.
-    CloseWindow();        // Close window and OpenGL context
+    CloseWindow(); // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 
     return 0;
