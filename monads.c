@@ -1219,9 +1219,7 @@ int main(void)
         if (selectedMonad && IsMouseButtonDown(MOUSE_BUTTON_LEFT) && (selectDrag || Vector2Distance(selectedMonad->position, mouseV2) <= 30.0f))
         {
             if (IsVector2OnScreen(mouseV2))
-            {
                 selectedMonad->position = mouseV2;
-            }
             selectDrag = true;
         }
         else
@@ -1232,9 +1230,10 @@ int main(void)
         float mouseMove = GetMouseWheelMove();
         if (mouseMove != 0)
         {
-            selectedDepth += (mouseMove > 0) ? 1 : -1;
-            if (selectedDepth < 0)
+            if (!selectedDepth && mouseMove <= 0.0f)
                 selectedDepth = 0;
+            else
+                selectedDepth += (mouseMove > 0.0f) ? 1 : -1;
         }
     }
 
