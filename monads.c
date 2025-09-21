@@ -106,6 +106,12 @@ bool IsVector2OnScreen(Vector2 pos)
 // Adds an object (subMonad) to ContainingMonadPtr. ContainingMonadPtr must not be null.
 struct Monad* AddMonad(Vector2 canvasPosition, Monad* containingMonadPtr)
 {
+    if (containingMonadPtr->depth >= UINT_MAX) // return container if the depth is beyond UINT max.
+    {
+        containingMonadPtr->position = canvasPosition;
+        return containingMonadPtr;
+    }
+
     //malloc and initialize new Monad. Always initialize variables that are not being overwritten.
     Monad* newMonadPtr = (Monad*)malloc(sizeof(Monad));
     memset(newMonadPtr, 0, sizeof(Monad));
