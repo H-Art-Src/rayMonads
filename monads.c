@@ -1073,9 +1073,12 @@ int main(void)
                 {
                     backspaceDelay--;
                 }
-                else if (selectedMonad)
+                else
                 {
-                    selectedMonad->name[strlen(selectedMonad->name) - 1] = '\0';
+                    if (selectedMonad)
+                    {
+                        selectedMonad->name[strlen(selectedMonad->name) - 1] = '\0';
+                    }
                     backspaceDelay = 5;
                 }
             }
