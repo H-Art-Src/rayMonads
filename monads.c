@@ -425,7 +425,6 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, int functionDepth, int select
             else if (INSCOPE)
             {
                 DrawLineV(MonadPtr->avgCenter, iterator->avgCenter, VIOLET);
-                DrawLineV(iterator->avgCenter, Vector2Add(next->avgCenter, Vector2Scale(Vector2Subtract(iterator->avgCenter, next->avgCenter), 0.9f)), ORANGE);
             }
 
             //--------------------------------
@@ -1142,6 +1141,8 @@ int main(void)
         {
             DrawText("Edit Link", 32, 64, 20, PURPLE);
             Vector2 linkLocation;
+            Vector2 endV2 = selectedLink->endMonad->avgCenter;
+            Vector2 endNextV2 = selectedLink->endMonad->next->avgCenter;
             if (selectedLink->startMonad == selectedLink->endMonad)
             {
                 linkLocation = selectedLink->startMonad->avgCenter;
@@ -1153,6 +1154,7 @@ int main(void)
             linkLocation.x -= 12.0f;
             linkLocation.y -= 12.0f;
             DrawRectangleV(linkLocation , (Vector2){24.0f, 24.0f} , Fade(RED, 0.5f));
+            DrawLineV(endV2, Vector2Add(endNextV2, Vector2Scale(Vector2Subtract(endV2, endNextV2), 0.9f)), ORANGE);
         }
 
         for (int m = 1, d = 1; m <= selectedDepth; m *= 10, d++)
