@@ -55,7 +55,7 @@ enum
 
 // 1. A Monad cannot have multiple container Monads.
 // 2. rootSubLink can only have starting Monads that exist within rootSubMonads.
-// 3. a Link cannot comprise of Monads of different depths.
+// 3. A Link cannot comprise of Monads of different depths.
 // 4. Only one combination of a Link can exist in totality.
 #define MAX_MONAD_NAME_SIZE 32
 #define MONAD_LINK_MIDDLE_LERP 0.35f
