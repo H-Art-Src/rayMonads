@@ -1017,7 +1017,12 @@ int main(void)
             {
                 if (selectedLink && IsKeyPressed(KEY_A))
                 {
+                    strcpy(monadLog, "Link endpoint changed from [");
+                    strcat(monadLog, selectedLink->endMonad->name);
+                    strcat(monadLog, "] to [");
                     selectedLink->endMonad = selectedLink->endMonad->next;
+                    strcat(monadLog, selectedLink->endMonad->name);
+                    strcat(monadLog, "].");
                 }
                 else if (IsKeyPressed(KEY_T))
                 {
