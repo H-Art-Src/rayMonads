@@ -897,6 +897,22 @@ char* InterpretLinksRecursive(Monad* selectedMonad , ParentedMonad parentInfo , 
     return progress;
 }
 
+void ScreenResizeSyncRecursive(Monad* monad , float ratioX , float ratioY)
+{
+    monad->avgCenter.x *= ratioX;
+    monad->avgCenter.y *= ratioY;
+    Monad* rootMonad = monad->rootSubMonads;
+    if (rootMonad)
+    {
+        Monad* iterator = rootMonad;
+        do
+        {
+            ScreenResizeSyncRecursive(iterator , ratioX , ratioY);
+            iterator = iterator->next;
+        } while (iterator != rootMonad);
+    }
+}
+
 void MonadsExample(Monad* GodMonad)
 {
     AddLink( AddMonad((Vector2) { 600, 500 }, GodMonad) , AddMonad((Vector2) { 200, 400 }, GodMonad) , GodMonad);
@@ -948,6 +964,15 @@ int main(void)
     // Main loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
+        int newScreenWidth = GetScreenWidth();
+        int newScreenHeight = GetScreenHeight();
+        if (screenWidth != newScreenWidth || screenHeight != newScreenHeight)
+        {
+            ScreenResizeSyncRecursive(GodMonad , (float){newScreenWidth}/(float){screenWidth} , (float){newScreenHeight}/(float){screenHeight});
+            screenWidth = newScreenWidth;
+            screenHeight = newScreenHeight;
+        }
+
         mouseV2 = GetMousePosition();
         if(IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT))
         {
@@ -1015,7 +1040,7 @@ int main(void)
                 else if (IsKeyPressed(KEY_C))
                 {
                     BeginDrawing();
-                    DrawText("COPYING", GetScreenHeight()/2 - 100, GetScreenWidth()/2 - 100, 48, ORANGE);
+                    DrawText("COPYING", screenHeight/2 - 100, screenWidth/2 - 100, 48, ORANGE);
                     EndDrawing();
                     char* out = malloc(1);
                     out[0] = '\0';
@@ -1030,7 +1055,7 @@ int main(void)
                 else if (IsKeyPressed(KEY_V) && IsVector2OnScreen(mouseV2))
                 {
                     BeginDrawing();
-                    DrawText("PASTING", GetScreenHeight()/2 - 100, GetScreenWidth()/2 - 100, 48, ORANGE);
+                    DrawText("PASTING", screenHeight/2 - 100, screenWidth/2 - 100, 48, ORANGE);
                     EndDrawing();
                     Monad* pastedOverMonad = AddMonad(mouseV2 , selectedMonad);
                     InterpretAddMonadsRecursive(pastedOverMonad , GetClipboardText());
@@ -1130,7 +1155,7 @@ int main(void)
         for (int m = 1, d = 1; m <= selectedDepth; m *= 10, d++)
         {
             char digit[2] = { '0' + (selectedDepth / m) % 10 ,  0 };
-            DrawText(digit, GetScreenWidth() - 32 * d, 64, 20, SKYBLUE);
+            DrawText(digit, screenWidth - 32 * d, 64, 20, SKYBLUE);
         }
         EndDrawing();
 
