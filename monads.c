@@ -364,7 +364,6 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, int functionDepth, int select
             if (INSCOPE)
             {
                 Vector2 startV2 = iterator->startMonad->avgCenter;
-                float giantUpLerp = fmaxf(0.3f , fminf(800.0f , Vector2Distance(startV2 , GetMousePosition())) / 800.0f);
                 bool linkHit = false;
                 if (iterator->startMonad == iterator->endMonad)
                 {
@@ -373,6 +372,7 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, int functionDepth, int select
                 }
                 else
                 {
+                    float giantUpLerp = fmaxf(0.3f , fminf(800.0f , Vector2Distance(startV2 , GetMousePosition())) / 800.0f);
                     Vector2 midPoint = DrawDualingBeziers(startV2 , iterator->endMonad->avgCenter , BLUE , SameCategory(iterator->endMonad, iterator->startMonad) ? BLACK : RED , 2.0f/giantUpLerp , 1.0f/giantUpLerp);
                     linkHit = CheckCollisionPointCircle(GetMousePosition() , midPoint , 30.0f);
                     if (linkHit)
@@ -425,6 +425,7 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, int functionDepth, int select
             else if (INSCOPE)
             {
                 DrawLineV(MonadPtr->avgCenter, iterator->avgCenter, VIOLET);
+                DrawLineV(iterator->avgCenter, Vector2Add(next->avgCenter, Vector2Scale(Vector2Subtract(iterator->avgCenter, next->avgCenter), 0.9f)), ORANGE);
             }
 
             //--------------------------------
@@ -1100,7 +1101,7 @@ int main(void)
         if (selectedMonad)
         {
             int determineMode = selectedMonad->depth - selectedDepth;
-            DrawText((!determineMode) ? "Adding" : (determineMode == 1) ? "Linking" : "Editing Name Only", 32, 32, 20, SKYBLUE);
+            DrawText((!determineMode) ? "Adding" : (determineMode == 1) ? "Linking" : "Edit Only", 32, 32, 20, SKYBLUE);
             DrawPoly(selectedMonad->avgCenter, 3, 10.0f, 0, Fade(RED, 0.5f));
             DrawText(selectedMonad->name, (int)selectedMonad->avgCenter.x + 10, (int)selectedMonad->avgCenter.y + 10, selectedDepth < selectedMonad->depth ? 16 : 24, Fade(ORANGE, 0.5f));
         }
