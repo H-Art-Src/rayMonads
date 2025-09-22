@@ -36,6 +36,7 @@ The following commands need a control key held down to function:
 -Key 'V' will paste the text data recursively as a new object contained by the selected object.
 -Key 'A' will advance the selected link's end object to its neighboring one in its stead.
 Holding a shift key will always select the object you right clicked, and if you added the object it will move you down to it's depth.
+If you hold a shift key while left clicking an object, you will go to its depth.
 */
 
 #include "raylib.h"
@@ -303,7 +304,7 @@ bool RemoveLink(Link* linkPtr, Monad* containingMonadPtr)
 }
 
 //Draws dual beziers, and returns the midpoint.
-Vector2 DrawDualingBeziers(Vector2 startV2 , Vector2 endV2 , Color colorCode , Color colorCode2 , float thick1 , float thick2)
+Vector2 DrawDualBeziers(Vector2 startV2 , Vector2 endV2 , Color colorCode , Color colorCode2 , float thick1 , float thick2)
 {
     Vector2 midPoint = Vector2Lerp(startV2, endV2, MONAD_LINK_MIDDLE_LERP);
     float zeroDistance = startV2.x - endV2.x;
@@ -364,8 +365,8 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, unsigned int functionDepth, u
                 }
                 else
                 {
-                    float giantUpLerp = fmaxf(0.3f , fminf(800.0f , Vector2Distance(startV2 , GetMousePosition())) / 800.0f);
-                    Vector2 midPoint = DrawDualingBeziers(startV2 , iterator->endMonad->position , BLUE , SameCategory(iterator->endMonad, iterator->startMonad) ? BLACK : RED , 2.0f/giantUpLerp , 1.0f/giantUpLerp);
+                    float giantUpLerp = fmaxf(0.3f , fminf(350.0f , Vector2Distance(startV2 , GetMousePosition())) / 350.0f);
+                    Vector2 midPoint = DrawDualBeziers(startV2 , iterator->endMonad->position , BLUE , SameCategory(iterator->endMonad, iterator->startMonad) ? BLACK : RED , 2.0f/giantUpLerp , 1.0f/giantUpLerp);
                     linkHit = CheckCollisionPointCircle(GetMousePosition() , midPoint , 30.0f);
                     if (linkHit)
                     {
@@ -1156,7 +1157,7 @@ int main(void)
             }
             else
             {
-                linkLocation = DrawDualingBeziers(selectedLink->startMonad->position , selectedLink->endMonad->position , Fade(RED, 0.5f) , Fade(SameCategory(selectedLink->endMonad, selectedLink->startMonad) ? RED : PURPLE, 0.5f) , 3.5 , 1.5f);
+                linkLocation = DrawDualBeziers(selectedLink->startMonad->position , selectedLink->endMonad->position , Fade(RED, 0.5f) , Fade(SameCategory(selectedLink->endMonad, selectedLink->startMonad) ? RED : PURPLE, 0.5f) , 3.5 , 1.5f);
             }
             linkLocation.x -= 12.0f;
             linkLocation.y -= 12.0f;
@@ -1173,10 +1174,8 @@ int main(void)
 
         switch (mainResult.resultKey)
         {
-            case RESULT_NONE:
-                break;
             case RESULT_CLICK:
-                if (selectedMonad == mainResult.resultMonad)
+                if (selectedMonad == mainResult.resultMonad && (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)))
                 {
                     if (mainResult.resultDepth > selectedDepth)
                         selectedDepth++;
@@ -1187,7 +1186,7 @@ int main(void)
                 selectedMonadDepth = mainResult.resultDepth;
                 selectedLink = mainResult.resultLink;
                 printf("Object %p, Link %p\n", selectedMonad, selectedLink);
-                break;
+            break;
             case RESULT_RCLICK:
                 if (selectedMonad)
                 {
@@ -1213,8 +1212,8 @@ int main(void)
                         {
                             selectedMonad = mainResult.resultMonad;
                             selectedMonadDepth = mainResult.resultDepth;
-                            selectedLink = NULL;
                         }
+                        selectedLink = NULL;
                     }
                     else if (selectedDepth == selectedMonadDepth)
                     {
@@ -1239,7 +1238,6 @@ int main(void)
                         }
                     }
                 }
-                break;
         }
 
         if (selectedMonad && IsMouseButtonDown(MOUSE_BUTTON_LEFT) && (selectDrag || Vector2Distance(selectedMonad->position, mouseV2) <= 30.0f))
