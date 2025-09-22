@@ -21,6 +21,6 @@ If you are selecting a link it will delete that instead of an object.
 - Key 'V' will paste the text data recursively as a new object contained by the selected object.
 - Key 'A' will advance the selected link's end object to its neighboring one in its stead.
 
-Holding a shift key will always select the object you right clicked, and if you added the object it will move you down to it's depth.
+Holding a shift key will always select the object you right clicked for an operation.
 If you hold a shift key while left clicking an object, you will go to its depth.
 Command: gcc monads.c -o monads.exe -lraylib -lopengl32 -lgdi32 -lwinmm
