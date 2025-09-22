@@ -20,5 +20,6 @@ If you are selecting a link it will delete that instead of an object.
 - Key 'C' will copy the selected monad's text data recursively to your clipboard.
 - Key 'V' will paste the text data recursively as a new object contained by the selected object.
 - Key 'A' will advance the selected link's end object to its neighboring one in its stead.
+Holding a shift key will always select the object you right clicked, and if you added the object it will move you down to it's depth.
 
 Command: gcc monads.c -o monads.exe -lraylib -lopengl32 -lgdi32 -lwinmm

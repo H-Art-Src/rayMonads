@@ -35,6 +35,7 @@ The following commands need a control key held down to function:
 -Key 'C' will copy the selected object and recursively for its sub-objects as text data into your clipboard.
 -Key 'V' will paste the text data recursively as a new object contained by the selected object.
 -Key 'A' will advance the selected link's end object to its neighboring one in its stead.
+Holding a shift key will always select the object you right clicked, and if you added the object it will move you down to it's depth.
 */
 
 #include "raylib.h"
@@ -235,11 +236,12 @@ struct Link* AddLink(Monad* start, Monad* end, Monad* containingMonadPtr)
         {
             if ((iterator->startMonad == start) && (iterator->endMonad == end))
             {
-                return iterator;
+                return NULL;
             }
             iterator = iterator->next;
         } while (iterator != rootPtr);
     }
+
     //malloc and initialize new Link. Always initialize variables that are not being overwritten.
     Link* newLinkPtr = (Link*)malloc(sizeof(Link));
     newLinkPtr->startMonad = start;
@@ -1016,7 +1018,11 @@ int main(void)
                     strcpy(monadLog, "Link end object cycled from [");
                     strcat(monadLog, selectedLink->endMonad->name);
                     strcat(monadLog, "] to [");
-                    selectedLink->endMonad = selectedLink->endMonad->next;
+                    Monad* newStartCycle = selectedLink->startMonad;
+                    Monad* newEndCycle = selectedLink->endMonad->next;
+                    RemoveLink(selectedLink , selectedMonad);
+                    while(!(selectedLink = AddLink(newStartCycle , newEndCycle , selectedMonad)))
+                        newEndCycle = newEndCycle->next;
                     strcat(monadLog, selectedLink->endMonad->name);
                     strcat(monadLog, "].");
                 }
@@ -1170,6 +1176,13 @@ int main(void)
             case RESULT_NONE:
                 break;
             case RESULT_CLICK:
+                if (selectedMonad == mainResult.resultMonad)
+                {
+                    if (mainResult.resultDepth > selectedDepth)
+                        selectedDepth++;
+                    else if (selectedDepth && mainResult.resultDepth <= selectedDepth)
+                        selectedDepth--;
+                }
                 selectedMonad = mainResult.resultMonad;
                 selectedMonadDepth = mainResult.resultDepth;
                 selectedLink = mainResult.resultLink;
@@ -1192,16 +1205,30 @@ int main(void)
                             strcat(monadLog, selectedLink->endMonad->name);
                             strcat(monadLog, "].");
                         }
-                        selectedMonad = mainResult.resultMonad;
-                        selectedMonadDepth = mainResult.resultDepth;
-                        selectedLink = NULL;
+                        else
+                        {
+                            strcpy(monadLog, "Link preexists.");
+                        }
+                        if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT))
+                        {
+                            selectedMonad = mainResult.resultMonad;
+                            selectedMonadDepth = mainResult.resultDepth;
+                            selectedLink = NULL;
+                        }
                     }
                     else if (selectedDepth == selectedMonadDepth)
                     {
                         if (!mainResult.resultMonad && Vector2Distance(selectedMonad->position, mouseV2) >= 30.0f /*deny if too close to container.*/)
                         {
                             strcpy(monadLog, "Added object [");
-                            strcat(monadLog, AddMonad(mouseV2, selectedMonad)->name);
+                            Monad* newMonad = AddMonad(mouseV2, selectedMonad);
+                            if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT))
+                            {
+                                selectedMonad = newMonad;
+                                selectedMonadDepth++;
+                                selectedLink = NULL;
+                            }
+                            strcat(monadLog, newMonad->name);
                             strcat(monadLog, "].");
                         }
                         else if (selectedLink)
