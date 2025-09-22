@@ -67,7 +67,6 @@ typedef struct Monad
     struct Monad* prev;
     struct Monad* next;
     struct Link* rootSubLink;
-    unsigned int depth;
     char deleteFrame;
 }  Monad;
 
@@ -106,12 +105,6 @@ bool IsVector2OnScreen(Vector2 pos)
 // Adds an object (subMonad) to ContainingMonadPtr. ContainingMonadPtr must not be null.
 struct Monad* AddMonad(Vector2 canvasPosition, Monad* containingMonadPtr)
 {
-    if (containingMonadPtr->depth >= UINT_MAX) // return container if the depth is beyond UINT max.
-    {
-        containingMonadPtr->position = canvasPosition;
-        return containingMonadPtr;
-    }
-
     //malloc and initialize new Monad. Always initialize variables that are not being overwritten.
     Monad* newMonadPtr = (Monad*)malloc(sizeof(Monad));
     memset(newMonadPtr, 0, sizeof(Monad));
@@ -119,7 +112,6 @@ struct Monad* AddMonad(Vector2 canvasPosition, Monad* containingMonadPtr)
     newMonadPtr->position = canvasPosition;
     newMonadPtr->rootSubMonads = NULL;
     newMonadPtr->rootSubLink = NULL;
-    newMonadPtr->depth = containingMonadPtr->depth + 1;
     newMonadPtr->deleteFrame = DELETE_OFF;
     newMonadPtr->name[0] = (containingMonadPtr->rootSubMonads) ? containingMonadPtr->rootSubMonads->prev->name[0] + 1 : 'A';
     newMonadPtr->name[1] = 0;
@@ -243,7 +235,6 @@ struct Link* AddLink(Monad* start, Monad* end, Monad* containingMonadPtr)
         {
             if ((iterator->startMonad == start) && (iterator->endMonad == end))
             {
-                printf("Link already exists.\n");
                 return iterator;
             }
             iterator = iterator->next;
@@ -729,7 +720,6 @@ enum interpretStep
     SUB,
     LINK
 };
-
 char* InterpretAddMonadsRecursive(Monad* selectedMonad , const char* in)
 {
     char* progress = (char*)in + 1; //adding 1 assuming it's coming right after a '['.
@@ -954,6 +944,7 @@ int main(void)
     Monad* selectedMonad = NULL;
     Link* selectedLink = NULL;
     unsigned int selectedDepth = 0;
+    unsigned int selectedMonadDepth = 0;
     ActiveResult mainResult = (ActiveResult){ 0 };
     bool selectDrag = false;
 
@@ -1137,10 +1128,10 @@ int main(void)
 
         if (selectedMonad)
         {
-            int determineMode = selectedMonad->depth - selectedDepth;
+            int determineMode = selectedMonadDepth - selectedDepth;
             DrawText((!determineMode) ? "Adding" : (determineMode == 1) ? "Linking" : "Edit Only", 32, 32, 20, SKYBLUE);
             DrawPoly(selectedMonad->position, 3, 10.0f, 0, Fade(RED, 0.5f));
-            DrawText(selectedMonad->name, (int)selectedMonad->position.x + 10, (int)selectedMonad->position.y + 10, selectedDepth < selectedMonad->depth ? 16 : 24, Fade(ORANGE, 0.5f));
+            DrawText(selectedMonad->name, (int)selectedMonad->position.x + 10, (int)selectedMonad->position.y + 10, selectedDepth < selectedMonadDepth ? 16 : 24, Fade(ORANGE, 0.5f));
         }
         else
         {
@@ -1180,13 +1171,14 @@ int main(void)
                 break;
             case RESULT_CLICK:
                 selectedMonad = mainResult.resultMonad;
+                selectedMonadDepth = mainResult.resultDepth;
                 selectedLink = mainResult.resultLink;
                 printf("Object %p, Link %p\n", selectedMonad, selectedLink);
                 break;
             case RESULT_RCLICK:
                 if (selectedMonad)
                 {
-                    if (mainResult.resultMonad && mainResult.resultContainerMonad && (mainResult.resultDepth == selectedMonad->depth))
+                    if (mainResult.resultMonad && mainResult.resultContainerMonad && (selectedDepth + 1 == selectedMonadDepth))
                     {
                         if (SameCategory(selectedMonad, mainResult.resultMonad))
                             selectedLink = AddLink(selectedMonad, mainResult.resultMonad, mainResult.resultContainerMonad);
@@ -1201,9 +1193,10 @@ int main(void)
                             strcat(monadLog, "].");
                         }
                         selectedMonad = mainResult.resultMonad;
+                        selectedMonadDepth = mainResult.resultDepth;
                         selectedLink = NULL;
                     }
-                    else if (selectedDepth == selectedMonad->depth)
+                    else if (selectedDepth == selectedMonadDepth)
                     {
                         if (!mainResult.resultMonad && Vector2Distance(selectedMonad->position, mouseV2) >= 30.0f /*deny if too close to container.*/)
                         {
@@ -1211,7 +1204,7 @@ int main(void)
                             strcat(monadLog, AddMonad(mouseV2, selectedMonad)->name);
                             strcat(monadLog, "].");
                         }
-                        else if (selectedLink && (selectedLink->startMonad->depth == mainResult.resultMonad->depth))
+                        else if (selectedLink)
                         {
                             strcpy(monadLog, "Changed link end object to [");
                             strcat(monadLog, (selectedLink->endMonad = mainResult.resultMonad)->name);
