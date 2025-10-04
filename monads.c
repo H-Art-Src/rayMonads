@@ -395,7 +395,7 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, unsigned int functionDepth, u
 
     //iterate through the objects with this object treated as a category.
     Monad* rootMonadPtr = MonadPtr->rootSubMonads;
-    float domainRadius = 0.0f;
+    float domainRadius = 5.0f;
     if (rootMonadPtr)
     {
         Monad* iterator = rootMonadPtr;
@@ -902,22 +902,50 @@ void ScreenResizeSyncRecursive(Monad* monad , float ratioX , float ratioY)
     }
 }
 
-void MonadsStressTest(Monad* monad , Monad* lastMonad , Link* lastLink , unsigned int limit)
+#include <stdlib.h>
+void MonadsStressTest(Monad* monad , Monad* lastMonad , Link* lastLink , Monad* lastLinkContainer , unsigned int limit)
 {
-    // if (!limit)
-    //     return;
-    // switch(randi() % 3)
-    // {
-    //     case 0: //add, down
-    //     MonadsStressTest( AddMonad((Vector2) { limit / 2 , limit }, monad) , monad , lastLink , limit - 1 );
-    //     break;
-    //     case 1://up, add, down
-    //     MonadsStressTest( AddMonad((Vector2) { limit / 2 , limit }, lastMonad) , lastMonad , lastLink , limit - 1 );
-    //     break;
-    //     case 2:
-    //     Monad* start =
-    //     break;
-    // }
+    if (!limit)
+        return;
+    if (lastMonad->rootSubLink) // don't only delete the only link.
+    {
+        lastLink = lastMonad->rootSubLink;
+        lastLinkContainer = lastMonad;
+    }
+    switch(rand() % 4)
+    {
+        case 0: //add, down
+        MonadsStressTest( AddMonad((Vector2) { 500 , 500 }, monad) , monad , lastLink , lastLinkContainer , limit - 1 );
+        break;
+        case 1://add, stay
+        MonadsStressTest( AddMonad((Vector2) { 500 , 500 }, lastMonad) , lastMonad , lastLink , lastLinkContainer , limit - 1 );
+        break;
+        case 2://rem monad, stay
+        if(lastLink)
+        {
+            Monad* start = lastLink->startMonad;
+            RemoveLink(lastLink , lastLinkContainer);
+            MonadsStressTest( start , lastLinkContainer , NULL , NULL , limit - 1 );
+            break;
+        }
+        case 3://add link, switch to endpoint, keep height
+        int cycles = rand() % 3;
+        Monad* start = monad;
+        while (cycles)
+        {
+            start = start->next;
+            cycles--;
+        }
+        cycles = rand() % 3;
+        Monad* end = start;
+        while (cycles)
+        {
+            end = end->prev;
+            cycles--;
+        }
+        MonadsStressTest(end , lastMonad , AddLink(start , end , lastMonad) , lastMonad , limit - 1);
+        break;
+    }
 }
 
 void MonadsExample(Monad* GodMonad)
@@ -965,9 +993,22 @@ int main(void)
     //--------------------------------------------------------------------------------------
 
     // Testing
-    //--------------------------------------------------------------------------------------    
-    MonadsStressTest(GodMonad , NULL , NULL , 10000);
-    //RemoveSubMonadsRecursive(GodMonad); // Free every object and link from memory.
+    //--------------------------------------------------------------------------------------
+    #include <time.h>
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+
+    Monad* pseudoGodMonad = AddMonad((Vector2){100,100} , GodMonad);
+    MonadsStressTest(AddMonad((Vector2){100,150} , pseudoGodMonad) , pseudoGodMonad , NULL , NULL , 100);
+    RemoveSubMonadsRecursive(pseudoGodMonad); //TODO render function can't handle high depth.
+    GodMonad->rootSubMonads = NULL;
+
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    double time_taken = (end.tv_sec - start.tv_sec) + 
+                       (end.tv_nsec - start.tv_nsec) / 1e9;
+    printf("Time taken: %.6f seconds\n", time_taken);
+    fflush(stdout);
+    
     MonadsExample(GodMonad);// Original example.
     //--------------------------------------------------------------------------------------
 
