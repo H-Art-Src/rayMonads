@@ -996,18 +996,16 @@ int main(void)
     //--------------------------------------------------------------------------------------
     #include <time.h>
     struct timespec start, end;
-    clock_gettime(CLOCK_MONOTONIC, &start);
-
     Monad* pseudoGodMonad = AddMonad((Vector2){100,100} , GodMonad);
-    MonadsStressTest(AddMonad((Vector2){100,150} , pseudoGodMonad) , pseudoGodMonad , NULL , NULL , 100);
-    RemoveSubMonadsRecursive(pseudoGodMonad); //TODO render function can't handle high depth.
-    GodMonad->rootSubMonads = NULL;
-
+    clock_gettime(CLOCK_MONOTONIC, &start);
+        MonadsStressTest(AddMonad((Vector2){100,150} , pseudoGodMonad) , pseudoGodMonad , NULL , NULL , 10000);
     clock_gettime(CLOCK_MONOTONIC, &end);
-    double time_taken = (end.tv_sec - start.tv_sec) + 
-                       (end.tv_nsec - start.tv_nsec) / 1e9;
-    printf("Time taken: %.6f seconds\n", time_taken);
-    fflush(stdout);
+    printf("MonadsStressTest() time taken: %.6f seconds\n", (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9);
+    clock_gettime(CLOCK_MONOTONIC, &start);
+        RemoveSubMonadsRecursive(pseudoGodMonad);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    printf("RemoveSubMonadsRecursive() time taken: %.6f seconds\n", (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9);
+    GodMonad->rootSubMonads = NULL;
     
     MonadsExample(GodMonad);// Original example.
     //--------------------------------------------------------------------------------------
