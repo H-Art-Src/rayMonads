@@ -908,6 +908,27 @@ void ScreenResizeSyncRecursive(Monad* monad , float ratioX , float ratioY)
     }
 }
 
+// void MonadsStressTest(Monad* monad , Monad* lastMonad , Link* lastLink , unsigned int limit)
+// {
+//     if (!limit)
+//         return;
+//     switch(randi() % )
+//     {
+//         case 0: //add, down
+//         MonadsStressTest( AddMonad((Vector2) { limit / 2 , limit }, monad) , monad , lastLink , limit - 1 );
+//         break;
+//         case 1://up, add, down
+//         MonadsStressTest( AddMonad((Vector2) { limit / 2 , limit }, lastMonad) , lastMonad , lastLink , limit - 1 );
+//         break;
+//         case 2:
+//         break;
+//         case 3:
+//         break;
+//         case 4:
+//         break;
+//     }
+// }
+
 void MonadsExample(Monad* GodMonad)
 {
     AddLink( AddMonad((Vector2) { 600, 500 }, GodMonad) , AddMonad((Vector2) { 200, 400 }, GodMonad) , GodMonad);
@@ -954,7 +975,9 @@ int main(void)
 
     // Testing
     //--------------------------------------------------------------------------------------    
-    MonadsExample(GodMonad);
+    //MonadsStressTest(GodMonad , NULL , NULL , 10,000);
+    //RemoveSubMonadsRecursive(GodMonad); // Free every object and link from memory.
+    MonadsExample(GodMonad);// Original example.
     //--------------------------------------------------------------------------------------
 
     // Main loop
