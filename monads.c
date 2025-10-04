@@ -575,7 +575,6 @@ char* PruneForbiddenCharactersMalloc(char* name)
 typedef struct DepthResult
 {
     Monad* containerMonad;
-    Monad* cousinMonad;
     Monad* sharedMonad; //highest point where both container and cousin can be both traced to.
     unsigned int depth;
     unsigned int sharedDepth;
@@ -583,9 +582,7 @@ typedef struct DepthResult
 DepthResult FindDepthOfObject(Monad* selectedMonad , Monad* findMonad , Monad* findCousinMonad , unsigned int Depth)
 {
     if (selectedMonad == findMonad)
-    {
-        return (DepthResult){NULL , NULL , NULL , Depth , -1};
-    }
+        return (DepthResult){NULL , NULL , Depth , -1};
     Monad* rootMonadPtr = selectedMonad->rootSubMonads;
     if (rootMonadPtr)
     {
@@ -596,9 +593,7 @@ DepthResult FindDepthOfObject(Monad* selectedMonad , Monad* findMonad , Monad* f
             if (result.depth != -1)
             {
                 if (!result.containerMonad)
-                {
                     result.containerMonad = selectedMonad;
-                }
                 if (result.sharedDepth == -1 && findCousinMonad)
                 {
                     Monad* iterator2 = rootMonadPtr;
@@ -608,7 +603,6 @@ DepthResult FindDepthOfObject(Monad* selectedMonad , Monad* findMonad , Monad* f
                         if (cousinResult.depth != -1) // If it's found, simply
                         {
                             result.sharedMonad = selectedMonad;
-                            result.cousinMonad = cousinResult.containerMonad;
                             result.sharedDepth = Depth;
                             break;
                         }
@@ -620,7 +614,7 @@ DepthResult FindDepthOfObject(Monad* selectedMonad , Monad* findMonad , Monad* f
             iterator = iterator->next;
         } while (iterator != rootMonadPtr);
     }
-    return (DepthResult){NULL , NULL , NULL , -1 , -1};
+    return (DepthResult){NULL , NULL , -1 , -1};
 }
 
 char* ChainCarrotAfterJumpStringRecursiveMalloc(Monad* sharedMonad , Monad* endMonad)
@@ -908,26 +902,23 @@ void ScreenResizeSyncRecursive(Monad* monad , float ratioX , float ratioY)
     }
 }
 
-// void MonadsStressTest(Monad* monad , Monad* lastMonad , Link* lastLink , unsigned int limit)
-// {
-//     if (!limit)
-//         return;
-//     switch(randi() % )
-//     {
-//         case 0: //add, down
-//         MonadsStressTest( AddMonad((Vector2) { limit / 2 , limit }, monad) , monad , lastLink , limit - 1 );
-//         break;
-//         case 1://up, add, down
-//         MonadsStressTest( AddMonad((Vector2) { limit / 2 , limit }, lastMonad) , lastMonad , lastLink , limit - 1 );
-//         break;
-//         case 2:
-//         break;
-//         case 3:
-//         break;
-//         case 4:
-//         break;
-//     }
-// }
+void MonadsStressTest(Monad* monad , Monad* lastMonad , Link* lastLink , unsigned int limit)
+{
+    // if (!limit)
+    //     return;
+    // switch(randi() % 3)
+    // {
+    //     case 0: //add, down
+    //     MonadsStressTest( AddMonad((Vector2) { limit / 2 , limit }, monad) , monad , lastLink , limit - 1 );
+    //     break;
+    //     case 1://up, add, down
+    //     MonadsStressTest( AddMonad((Vector2) { limit / 2 , limit }, lastMonad) , lastMonad , lastLink , limit - 1 );
+    //     break;
+    //     case 2:
+    //     Monad* start =
+    //     break;
+    // }
+}
 
 void MonadsExample(Monad* GodMonad)
 {
@@ -975,7 +966,7 @@ int main(void)
 
     // Testing
     //--------------------------------------------------------------------------------------    
-    //MonadsStressTest(GodMonad , NULL , NULL , 10,000);
+    MonadsStressTest(GodMonad , NULL , NULL , 10000);
     //RemoveSubMonadsRecursive(GodMonad); // Free every object and link from memory.
     MonadsExample(GodMonad);// Original example.
     //--------------------------------------------------------------------------------------
