@@ -1229,9 +1229,14 @@ int main(void)
                         }
                         else if (selectedLink && selectedMonadDepth + 1 == mainResult.resultDepth && selectedLink->endMonad != mainResult.resultMonad)
                         {
-                            strcpy(monadLog, "Changed link end object to [");
-                            strcat(monadLog, (selectedLink->endMonad = mainResult.resultMonad)->name);
-                            strcat(monadLog, "].");
+                            Link* newLink = AddLink(selectedLink->startMonad , mainResult.resultMonad , selectedMonad );
+                            if (newLink && RemoveLink(selectedLink , selectedMonad));
+                            {
+                                selectedLink = newLink;
+                                strcpy(monadLog, "Changed link end object to [");
+                                strcat(monadLog, selectedLink->endMonad->name);
+                                strcat(monadLog, "].");
+                            }
                         }
                     }
                 }
