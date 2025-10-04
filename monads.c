@@ -687,8 +687,6 @@ void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, char** outRef)
             {
                 unsigned int jumpBy = depthResult.depth - depthResult.sharedDepth - 1;
                 unsigned int subIndex = 0;
-                printf("DR container:%p cousin:%p shared:%p depth: %i shared depth: %i\n", depthResult.containerMonad , depthResult.cousinMonad , depthResult.sharedMonad , depthResult.depth , depthResult.sharedDepth);    
-                printf("%p->%p needs a jump by: %i\n" , iterator->startMonad , iterator->endMonad , jumpBy);
                 Monad* matchingIterator = rootMonadPtr;
                 do
                 {
@@ -1053,7 +1051,6 @@ int main(void)
                     out[0] = '\0';
                     PrintMonadsRecursive(selectedMonad , selectedMonad , &out);
                     SetClipboardText(out);
-                    printf("%s\n",out);
                     free(out);
                     strcpy(monadLog, "Copied text data from [");
                     strcat(monadLog, selectedMonad->name);
