@@ -468,7 +468,7 @@ struct ActiveResult* RecursiveDraw(Monad* MonadPtr, unsigned int functionDepth, 
     if (activeResult.resultMonad == MonadPtr)
         DrawCircleLinesV(MonadPtr->position, 20.0f, ORANGE);
 
-    return memcpy(malloc(sizeof(ActiveResult)) , &activeResult , sizeof(ActiveResult));;
+    return memcpy(malloc(sizeof(ActiveResult)) , &activeResult , sizeof(ActiveResult));
 }
 
 enum discardAppend
