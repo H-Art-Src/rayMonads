@@ -326,7 +326,7 @@ Vector2 DrawDualBeziers(Vector2 startV2 , Vector2 endV2 , Color colorCode , Colo
 #define PRESCOPE functionDepth < selectedDepth
 
 //Renders all Monads and Link. Returns activated Monad, it's container, if any and the depth. MonadPtr must not be null.
-struct ActiveResult RecursiveDraw(Monad* MonadPtr, unsigned int functionDepth, unsigned int selectedDepth)
+struct ActiveResult* RecursiveDraw(Monad* MonadPtr, unsigned int functionDepth, unsigned int selectedDepth)
 {
     //check collision with mouse, generate first part of activeResult.
     ActiveResult activeResult = (ActiveResult){ 0 };
@@ -407,25 +407,26 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, unsigned int functionDepth, u
             }
 
             //--------------------------------
-            ActiveResult activeOverride = RecursiveDraw(iterator, functionDepth + 1, selectedDepth);
+            ActiveResult* activeOverrideMallocPtr = RecursiveDraw(iterator, functionDepth + 1, selectedDepth);
             //--------------------------------
-
-            if (activeOverride.resultMonad && !activeResult.resultLink)
+            if (activeOverrideMallocPtr)
             {
-                activeResult = activeOverride;
+                if (activeOverrideMallocPtr->resultMonad && !activeResult.resultLink)
+                {
+                    memcpy(&activeResult, activeOverrideMallocPtr, sizeof(ActiveResult));
+                }
+                else if (activeOverrideMallocPtr->resultLink)
+                {
+                    activeResult.resultLink = activeOverrideMallocPtr->resultLink;
+                    activeResult.resultMonad = MonadPtr;
+                }
+                free(activeOverrideMallocPtr);
             }
-            else if (activeOverride.resultLink)
-            {
-                activeResult.resultLink = activeOverride.resultLink;
-                activeResult.resultMonad = MonadPtr;
-            }
-
             float newdomainRadius = Vector2Distance(MonadPtr->position , iterator->position);
             if (newdomainRadius > domainRadius)
             {
                 domainRadius = newdomainRadius;
             }
-
             iterator = next;
         } while (iterator != rootMonadPtr);
     }
@@ -434,7 +435,7 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, unsigned int functionDepth, u
     if (MonadPtr->deleteFrame >= DELETE_PRELINK)
     {
         MonadPtr->deleteFrame++;
-        return (ActiveResult) { 0 };
+        return NULL;
     }
     else if (MonadPtr->deleteFrame >= DELETE_POSTONLYLINK)
     {
@@ -443,7 +444,7 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, unsigned int functionDepth, u
 
     //cancel any more drawing.
     if (OUTSCOPED)
-        return (ActiveResult) { 0 };
+        return NULL;
 
     //we have returned back to the container, since this is null, we know that this is the container.
     if (!activeResult.resultContainerMonad && (activeResult.resultMonad != MonadPtr))
@@ -467,7 +468,7 @@ struct ActiveResult RecursiveDraw(Monad* MonadPtr, unsigned int functionDepth, u
     if (activeResult.resultMonad == MonadPtr)
         DrawCircleLinesV(MonadPtr->position, 20.0f, ORANGE);
 
-    return activeResult;
+    return memcpy(malloc(sizeof(ActiveResult)) , &activeResult , sizeof(ActiveResult));;
 }
 
 enum discardAppend
@@ -1161,7 +1162,13 @@ int main(void)
 
         BeginDrawing();
         ClearBackground(RAYWHITE);
-        mainResult = RecursiveDraw(GodMonad, 0, selectedDepth);
+        mainResult = (ActiveResult) { 0 };
+        ActiveResult* mainResultMallocPtr = RecursiveDraw(GodMonad, 0, selectedDepth);
+        if (mainResultMallocPtr)
+        {
+            memcpy(&mainResult , mainResultMallocPtr , sizeof(ActiveResult));
+            free(mainResultMallocPtr);
+        }
         DrawText(monadLog, 48, 8, 20, GRAY);
 
         if (selectedMonad)
