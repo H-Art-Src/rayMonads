@@ -66,7 +66,6 @@ typedef struct Monad
     char name[MAX_MONAD_NAME_SIZE];
     Vector2 position;
     struct Monad* rootSubMonads;
-    struct Monad* prev;
     struct Monad* next;
     struct Link* rootSubLink;
     char deleteFrame;
@@ -76,7 +75,6 @@ typedef struct Link
 {
     struct Monad* startMonad;
     struct Monad* endMonad;
-    struct Link* prev;
     struct Link* next;
 } Link;
 
@@ -115,7 +113,7 @@ struct Monad* AddMonad(Vector2 canvasPosition, Monad* containingMonadPtr)
     newMonadPtr->rootSubMonads = NULL;
     newMonadPtr->rootSubLink = NULL;
     newMonadPtr->deleteFrame = DELETE_OFF;
-    newMonadPtr->name[0] = (containingMonadPtr->rootSubMonads) ? containingMonadPtr->rootSubMonads->prev->name[0] + 1 : 'A';
+    newMonadPtr->name[0] = (containingMonadPtr->rootSubMonads) ? containingMonadPtr->rootSubMonads->next->name[0] + 1 : 'A';
     newMonadPtr->name[1] = 0;
 
     //insert new Monad in list entry.
@@ -123,27 +121,21 @@ struct Monad* AddMonad(Vector2 canvasPosition, Monad* containingMonadPtr)
     if (rootPtr) //has entries.
     {
         Monad* rootNextPtrUnchanged = rootPtr->next;
-        Monad* rootPrevPtrUnchanged = rootPtr->prev;
-        if ((rootPtr == rootNextPtrUnchanged) || (rootPtr == rootPrevPtrUnchanged)) //after one entry
+        if (rootPtr == rootNextPtrUnchanged) //after one entry
         {
             newMonadPtr->next = rootPtr;
-            newMonadPtr->prev = rootPtr;
             rootPtr->next = newMonadPtr;
-            rootPtr->prev = newMonadPtr;
         }
         else //after two or more entries.
         {
-            newMonadPtr->next = rootPtr;
-            newMonadPtr->prev = rootPrevPtrUnchanged;
-            rootPtr->prev = newMonadPtr;
-            rootPrevPtrUnchanged->next = newMonadPtr;
+            newMonadPtr->next = rootNextPtrUnchanged;
+            rootPtr->next = newMonadPtr;
         }
     }
     else //after zero entries
     {
         containingMonadPtr->rootSubMonads = rootPtr = newMonadPtr;
         rootPtr->next = newMonadPtr;
-        rootPtr->prev = newMonadPtr;
     }
 
     //move containing Monad
@@ -188,7 +180,9 @@ bool RemoveMonad(Monad* MonadPtr, Monad* containingMonadPtr)
     Monad* rootMonad = containingMonadPtr->rootSubMonads;
     if (rootMonad)
     {
-        Monad* iterator = rootMonad;
+        Monad* afterRoot = rootMonad->next;
+        Monad* prev = rootMonad;
+        Monad* iterator = afterRoot;
         do
         {
             if (iterator == MonadPtr)
@@ -197,13 +191,13 @@ bool RemoveMonad(Monad* MonadPtr, Monad* containingMonadPtr)
                     containingMonadPtr->rootSubMonads = NULL;
                 else if (rootMonad == iterator) //is root and NOT sole sub Monad.
                     containingMonadPtr->rootSubMonads = rootMonad->next;
-                iterator->next->prev = iterator->prev;
-                iterator->prev->next = iterator->next;
+                prev->next = iterator->next;
                 RemoveSubMonadsRecursive(iterator);
                 return true;
             }
+            prev = iterator;
             iterator = iterator->next;
-        } while (iterator != rootMonad);
+        } while (iterator != afterRoot);
     }
     return false;
 }
@@ -250,27 +244,21 @@ struct Link* AddLink(Monad* start, Monad* end, Monad* containingMonadPtr)
     if (rootPtr) //has entries.
     {
         Link* rootNextPtrUnchanged = rootPtr->next;
-        Link* rootPrevPtrUnchanged = rootPtr->prev;
-        if ((rootPtr == rootNextPtrUnchanged) || (rootPtr == rootPrevPtrUnchanged)) //after one entry
+        if (rootPtr == rootNextPtrUnchanged) //after one entry
         {
             newLinkPtr->next = rootPtr;
-            newLinkPtr->prev = rootPtr;
             rootPtr->next = newLinkPtr;
-            rootPtr->prev = newLinkPtr;
         }
         else //after two or more entries.
         {
-            newLinkPtr->next = rootPtr;
-            newLinkPtr->prev = rootPrevPtrUnchanged;
-            rootPtr->prev = newLinkPtr;
-            rootPrevPtrUnchanged->next = newLinkPtr;
+            newLinkPtr->next = rootNextPtrUnchanged;
+            rootPtr->next = newLinkPtr;
         }
     }
     else //after zero entries
     {
         containingMonadPtr->rootSubLink = rootPtr = newLinkPtr;
         rootPtr->next = newLinkPtr;
-        rootPtr->prev = newLinkPtr;
     }
     return newLinkPtr;
 }
@@ -281,7 +269,9 @@ bool RemoveLink(Link* linkPtr, Monad* containingMonadPtr)
     Link* rootLink = containingMonadPtr->rootSubLink;
     if (rootLink)
     {
-        Link* iterator = rootLink;
+        Link* afterRoot = rootLink->next;
+        Link* prev = rootLink;
+        Link* iterator = afterRoot;
         do
         {
             if (iterator == linkPtr)
@@ -290,13 +280,13 @@ bool RemoveLink(Link* linkPtr, Monad* containingMonadPtr)
                     containingMonadPtr->rootSubLink = NULL;
                 else if (rootLink == iterator) //is root and NOT sole sub Link.
                     containingMonadPtr->rootSubLink = rootLink->next;
-                iterator->next->prev = iterator->prev;
-                iterator->prev->next = iterator->next;
+                prev->next = iterator->next;
                 free(iterator);
                 return true;
             }
+            prev = iterator;
             iterator = iterator->next;
-        } while (iterator != rootLink);
+        } while (iterator != afterRoot);
     }
     return false;
 }
@@ -922,7 +912,7 @@ void MonadsStressTest(Monad* monad , Monad* lastMonad , Link* lastLink , Monad* 
         Monad* end = start;
         while (cycles)
         {
-            end = end->prev;
+            end = end->next;
             cycles--;
         }
         MonadsStressTest(end , lastMonad , AddLink(start , end , lastMonad) , lastMonad , limit - 1);
@@ -958,7 +948,6 @@ int main(void)
 
     GodMonad->position.x = screenWidth / 2.0f;
     GodMonad->position.y = screenHeight / 2.0f;
-    GodMonad->prev = GodMonad;
     GodMonad->next = GodMonad;
     strcpy(GodMonad->name, "Monad 0");
 
