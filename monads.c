@@ -781,22 +781,24 @@ char* InterpretLinksRecursive(Monad* selectedMonad , ParentedMonad parentInfo , 
                 reverseLink = true;
             break;
             case ';':
-                findEnderIterator = findEnderIterator->rootSubMonads;
-                Monad* rootEnderIterator = findEnderIterator;
-                unsigned int endIndex = 0;
-                do
+                if(findEnderIterator && (findEnderIterator = findEnderIterator->rootSubMonads) && step == LINK)
                 {
-                    if (!strcmp(GenerateIDMalloc(endIndex) , payload))
+                    Monad* rootEnderIterator = findEnderIterator;
+                    unsigned int endIndex = 0;
+                    do
                     {
-                        break;
-                    }
-                    findEnderIterator = findEnderIterator->next;
-                    endIndex++;
-                } while (findEnderIterator != rootEnderIterator);
-                if (reverseLink)
-                    AddLink(findEnderIterator , findStartIterator , selectedMonad);
-                else
-                    AddLink(findStartIterator , findEnderIterator , selectedMonad);
+                        if (!strcmp(GenerateIDMalloc(endIndex) , payload))
+                        {
+                            break;
+                        }
+                        findEnderIterator = findEnderIterator->next;
+                        endIndex++;
+                    } while (findEnderIterator != rootEnderIterator);
+                    if (reverseLink)
+                        AddLink(findEnderIterator , findStartIterator , selectedMonad);
+                    else
+                        AddLink(findStartIterator , findEnderIterator , selectedMonad);
+                }
                 free(payload);
                 payload = malloc(1);
                 payload[0] = '\0';
@@ -804,43 +806,46 @@ char* InterpretLinksRecursive(Monad* selectedMonad , ParentedMonad parentInfo , 
                 reverseLink = false;
             break;
             case '>':
-                switch (payloadIndex)
+                if (rootMonadPtr && step == LINK)
                 {
-                    case 0:
-                        findStartIterator = rootMonadPtr;
-                        unsigned int startIndex = 0;
-                        do
-                        {
-                            if (!strcmp(GenerateIDMalloc(startIndex) , payload))
-                                break;
-                            findStartIterator = findStartIterator->next;
-                            startIndex++;
-                        } while (findStartIterator != rootMonadPtr);
-                        payloadIndex++;
-                    break;
-                    case 1://jump
-                        findEnderIterator = selectedMonad;
-                        ParentedMonad* currentChain = &parentInfo;
-                        unsigned int jumpIndex = 0;
-                        while (currentChain && strcmp(GenerateIDMalloc(jumpIndex) , payload)) 
-                        {
-                            findEnderIterator = currentChain->monad;
-                            currentChain = currentChain->parentChain;
-                            jumpIndex++;
-                        }
-                        payloadIndex++;
-                    break;
-                    case 2:
-                        findEnderIterator = findEnderIterator->rootSubMonads;
-                        Monad* rootEnderIterator = findEnderIterator;
-                        unsigned int endIndex = 0;
-                        do
-                        {
-                            if (!strcmp(GenerateIDMalloc(endIndex) , payload))
-                                break;
-                            findEnderIterator = findEnderIterator->next;
-                            endIndex++;
-                        } while (findEnderIterator != rootEnderIterator);
+                    switch (payloadIndex)
+                    {
+                        case 0:
+                            findStartIterator = rootMonadPtr;
+                            unsigned int startIndex = 0;
+                            do
+                            {
+                                if (!strcmp(GenerateIDMalloc(startIndex) , payload))
+                                    break;
+                                findStartIterator = findStartIterator->next;
+                                startIndex++;
+                            } while (findStartIterator != rootMonadPtr);
+                            payloadIndex++;
+                        break;
+                        case 1://jump
+                            findEnderIterator = selectedMonad;
+                            ParentedMonad* currentChain = &parentInfo;
+                            unsigned int jumpIndex = 0;
+                            while (currentChain && currentChain->monad && currentChain->parentChain && strcmp(GenerateIDMalloc(jumpIndex) , payload)) 
+                            {
+                                findEnderIterator = currentChain->monad;
+                                currentChain = currentChain->parentChain;
+                                jumpIndex++;
+                            }
+                            payloadIndex++;
+                        break;
+                        case 2:
+                            findEnderIterator = findEnderIterator->rootSubMonads;
+                                Monad* rootEnderIterator = findEnderIterator;
+                                unsigned int endIndex = 0;
+                                do
+                                {
+                                    if (!strcmp(GenerateIDMalloc(endIndex) , payload))
+                                        break;
+                                    findEnderIterator = findEnderIterator->next;
+                                    endIndex++;
+                                } while (findEnderIterator != rootEnderIterator);
+                    }
                 }
                 free(payload);
                 payload = malloc(1);
