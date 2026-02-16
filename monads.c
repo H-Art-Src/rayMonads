@@ -113,29 +113,22 @@ struct Monad* AddMonad(Vector2 canvasPosition, Monad* containingMonadPtr)
     newMonadPtr->rootSubMonads = NULL;
     newMonadPtr->rootSubLink = NULL;
     newMonadPtr->deleteFrame = DELETE_OFF;
-    newMonadPtr->name[0] = (containingMonadPtr->rootSubMonads) ? containingMonadPtr->rootSubMonads->next->name[0] + 1 : 'A';
     newMonadPtr->name[1] = 0;
 
     //insert new Monad in list entry.
     Monad* rootPtr = containingMonadPtr->rootSubMonads;
     if (rootPtr) //has entries.
     {
-        Monad* rootNextPtrUnchanged = rootPtr->next;
-        if (rootPtr == rootNextPtrUnchanged) //after one entry
-        {
-            newMonadPtr->next = rootPtr;
-            rootPtr->next = newMonadPtr;
-        }
-        else //after two or more entries.
-        {
-            newMonadPtr->next = rootNextPtrUnchanged;
-            rootPtr->next = newMonadPtr;
-        }
+        newMonadPtr->name[0] = containingMonadPtr->rootSubMonads->name[0] + 1;
+        newMonadPtr->next = rootPtr->next;
+        rootPtr->next = newMonadPtr;
+        containingMonadPtr->rootSubMonads = newMonadPtr;
     }
     else //after zero entries
     {
         containingMonadPtr->rootSubMonads = rootPtr = newMonadPtr;
         rootPtr->next = newMonadPtr;
+        newMonadPtr->name[0] = 'A';
     }
 
     //move containing Monad
@@ -635,6 +628,7 @@ void PrintMonadsRecursive(Monad* MonadPtr, Monad* OriginalMonad, char** outRef)
     Monad* rootMonadPtr = MonadPtr->rootSubMonads;
     if (rootMonadPtr)
     {
+        rootMonadPtr = rootMonadPtr->next; //Start at "index 0", root always points at last
         Monad* iterator = rootMonadPtr;
         do
         {
@@ -750,6 +744,10 @@ char* InterpretLinksRecursive(Monad* selectedMonad , ParentedMonad parentInfo , 
     char* progress = (char*)in + 1; //adding 1 assuming it's coming right after a '['.
     char* payload = malloc(1);
     Monad* rootMonadPtr = selectedMonad->rootSubMonads;
+    if (rootMonadPtr)
+    {
+        rootMonadPtr = rootMonadPtr->next;
+    }
     Monad* subIterator = rootMonadPtr;
     Monad* findStartIterator = NULL;
     Monad* findEnderIterator = NULL;
