@@ -997,8 +997,8 @@ int main(void)
             screenWidth = newScreenWidth;
             screenHeight = newScreenHeight;
         }
-
         mouseV2 = GetMousePosition();
+        bool isCutting = IsKeyPressed(KEY_X);
         if(IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT))
         {
             strcpy(monadLog , "");
@@ -1071,8 +1071,7 @@ int main(void)
                     strcat(monadLog, "].");
                     selectedMonad->deleteFrame = DELETE_ONLYLINK;
                 }
-                bool isCutting = IsKeyPressed(KEY_X);
-                if (IsKeyPressed(KEY_C) || isCutting)
+                else if (IsKeyPressed(KEY_C) || isCutting)
                 {
                     BeginDrawing();
                     DrawText("COPYING", screenHeight/2 - 100, screenWidth/2 - 100, 48, ORANGE);
