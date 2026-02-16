@@ -970,18 +970,18 @@ int main(void)
 
     // Testing
     //--------------------------------------------------------------------------------------
-    // #include <time.h>
-    // struct timespec start, end;
-    // Monad* pseudoGodMonad = AddMonad((Vector2){100,100} , GodMonad);
-    // clock_gettime(CLOCK_MONOTONIC, &start);
-    //     MonadsStressTest(AddMonad((Vector2){100,150} , pseudoGodMonad) , pseudoGodMonad , NULL , NULL , 10000);
-    // clock_gettime(CLOCK_MONOTONIC, &end);
-    // printf("MonadsStressTest() time taken: %.6f seconds\n", (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9);
-    // clock_gettime(CLOCK_MONOTONIC, &start);
-    //     RemoveSubMonadsRecursive(pseudoGodMonad);
-    // clock_gettime(CLOCK_MONOTONIC, &end);
-    // printf("RemoveSubMonadsRecursive() time taken: %.6f seconds\n", (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9);
-    // GodMonad->rootSubMonads = NULL;
+    #include <time.h>
+    struct timespec start, end;
+    Monad* pseudoGodMonad = AddMonad((Vector2){100,100} , GodMonad);
+    clock_gettime(CLOCK_MONOTONIC, &start);
+        MonadsStressTest(AddMonad((Vector2){100,150} , pseudoGodMonad) , pseudoGodMonad , NULL , NULL , 10000);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    printf("MonadsStressTest() time taken: %.6f seconds\n", (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9);
+    clock_gettime(CLOCK_MONOTONIC, &start);
+        RemoveSubMonadsRecursive(pseudoGodMonad);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    printf("RemoveSubMonadsRecursive() time taken: %.6f seconds\n", (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9);
+    GodMonad->rootSubMonads = NULL;
     
     MonadsExample(GodMonad);// Original example.
     //--------------------------------------------------------------------------------------
