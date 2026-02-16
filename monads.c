@@ -33,6 +33,7 @@ The following commands need a control key held down to function:
 -Key 'B' to delete all connections from and to a selected object.
 -Key 'T' will rename the selected object to your clipboard contents.
 -Key 'C' will copy the selected object and recursively for its sub-objects as text data into your clipboard.
+-Key 'X' will do the above then delete it (Cut).
 -Key 'V' will paste the text data recursively as a new object contained by the selected object.
 -Key 'A' will advance the selected link's end object to its neighboring one in its stead.
 Holding a shift key will always select the object you right clicked, and if you added the object it will move you down to it's depth.
@@ -941,7 +942,7 @@ int main(void)
     int screenWidth = 800;
     int screenHeight = 800;
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
-    InitWindow(screenWidth, screenHeight, "Monad");
+    InitWindow(screenWidth, screenHeight, "Monads");
     SetTargetFPS(60);
     //--------------------------------------------------------------------------------------
 
@@ -1070,7 +1071,8 @@ int main(void)
                     strcat(monadLog, "].");
                     selectedMonad->deleteFrame = DELETE_ONLYLINK;
                 }
-                else if (IsKeyPressed(KEY_C))
+                bool isCutting = IsKeyPressed(KEY_X);
+                if (IsKeyPressed(KEY_C) || isCutting)
                 {
                     BeginDrawing();
                     DrawText("COPYING", screenHeight/2 - 100, screenWidth/2 - 100, 48, ORANGE);
@@ -1080,9 +1082,32 @@ int main(void)
                     PrintMonadsRecursive(selectedMonad , selectedMonad , &out);
                     SetClipboardText(out);
                     free(out);
-                    strcpy(monadLog, "Copied text data from [");
-                    strcat(monadLog, selectedMonad->name);
-                    strcat(monadLog, "] to clipboard.");   
+                    if (isCutting)
+                    {
+                        if (selectedMonad == GodMonad)
+                        {
+                            strcpy(monadLog, "Cannot cut [");
+                            strcat(monadLog, selectedMonad->name);
+                            strcat(monadLog, "]: Is root. Copied instead.");
+                        }
+                        else
+                        {
+                            if (!selectedMonad->deleteFrame)
+                            {
+                                strcpy(monadLog, "Cut object [");
+                                strcat(monadLog, selectedMonad->name);
+                                strcat(monadLog, "].");
+                                selectedMonad->deleteFrame = DELETE_PRELINK;
+                            }
+                            selectedMonad = NULL;
+                        }
+                    }
+                    else
+                    {
+                        strcpy(monadLog, "Copied text data from [");
+                        strcat(monadLog, selectedMonad->name);
+                        strcat(monadLog, "] to clipboard.");
+                    }
                 }
                 else if (IsKeyPressed(KEY_V) && IsVector2OnScreen(mouseV2))
                 {
@@ -1093,6 +1118,7 @@ int main(void)
                     InterpretAddMonadsRecursive(pastedOverMonad , GetClipboardText());
                     InterpretLinksRecursive(pastedOverMonad , (ParentedMonad){NULL , NULL} , GetClipboardText());
                     selectedMonad = pastedOverMonad;
+                    selectedMonadDepth++;
                     pastedOverMonad->position = mouseV2;
                     strcpy(monadLog, "Pasted text data in [");
                     strcat(monadLog, selectedMonad->name);
