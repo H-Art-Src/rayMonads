@@ -1246,7 +1246,7 @@ int main(void)
             case RESULT_RCLICK:
                 if (selectedMonad)
                 {
-                    if (mainResult.resultMonad && mainResult.resultContainerMonad && (selectedDepth + 1 == selectedMonadDepth))
+                    if (mainResult.resultMonad && mainResult.resultContainerMonad && (selectedDepth + 1 == selectedMonadDepth) && mainResult.resultDepth == selectedMonadDepth)
                     {
                         if (SameCategory(selectedMonad, mainResult.resultMonad))
                             selectedLink = AddLink(selectedMonad, mainResult.resultMonad, mainResult.resultContainerMonad);
