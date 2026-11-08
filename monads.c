@@ -334,7 +334,7 @@ struct ActiveResult* RecursiveDraw(Monad* MonadPtr, unsigned int functionDepth, 
                 float giantUpLerp = fmaxf(0.3f , fminf(350.0f , Vector2Distance(startV2 , GetMousePosition())) / 350.0f);
                 if (iterator->startMonad == iterator->endMonad)
                 {
-                    linkHit = CheckCollisionPointCircle(GetMousePosition(), Vector2Add(startV2, (Vector2) { 30.0f, 30.0f }), 30.0f);
+                    linkHit = CheckCollisionPointCircle(GetMousePosition(), Vector2Add(startV2, (Vector2) { SELF_LINK_REGION, SELF_LINK_REGION }), 30.0f);
                     DrawRectangleLinesEx((Rectangle){startV2.x, startV2.y, SELF_LINK_REGION, SELF_LINK_REGION} , 1.0f/giantUpLerp , (linkHit) ? RED : BLACK);
                 }
                 else
